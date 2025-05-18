@@ -44,3 +44,7 @@ app.*.map.json
 
 # Lock files
 **/*.lock
+
+# Generated files
+**/*.g.dart
+**/*.g.yaml
