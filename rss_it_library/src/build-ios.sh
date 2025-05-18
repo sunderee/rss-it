@@ -8,7 +8,7 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
 fi
 
 # Library configuration
-PROJECT_NAME="gofeed_flutter"
+PROJECT_NAME="rss_it_library"
 LIB_NAME="lib${PROJECT_NAME}"
 PREBUILD_PATH="../prebuild/iOS"
 
