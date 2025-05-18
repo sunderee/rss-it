@@ -17,6 +17,8 @@ dependencies:
 
   # Local persistence
   hive_ce: ^2.11.2
+
+  # Utilities
   collection: ^1.19.1
   dart_scope_functions: ^1.0.2
 
