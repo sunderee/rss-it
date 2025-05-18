@@ -5,5 +5,5 @@
 
 #define FFI_PLUGIN_EXPORT
 
-FFI_PLUGIN_EXPORT bool validateFeedURL(const char* feed_url);
-// FFI_PLUGIN_EXPORT char* parseFeeds(const char* feed_urls);
+FFI_PLUGIN_EXPORT bool validate(const char* feed_url);
+FFI_PLUGIN_EXPORT char* parse(const char* feed_urls);

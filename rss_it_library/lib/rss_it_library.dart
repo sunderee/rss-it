@@ -9,12 +9,21 @@ import 'rss_it_library_bindings_generated.dart';
 
 Future<bool> validateFeedURL(String url) async {
   final cURL = url.toNativeUtf8().cast<Char>();
-  final validationResult = await Isolate.run(
-    () => _bindings.validateFeedURL(cURL),
-  );
+  final validationResult = await Isolate.run(() => _bindings.validate(cURL));
 
   malloc.free(cURL);
   return validationResult;
+}
+
+Future<String> parseFeedURLs(String urls) async {
+  final cURLs = urls.toNativeUtf8().cast<Char>();
+  final parseResult = await Isolate.run(() => _bindings.parse(cURLs));
+  final parseResultString = parseResult.cast<Utf8>().toDartString();
+
+  malloc.free(cURLs);
+  malloc.free(parseResult);
+
+  return parseResultString;
 }
 
 const String _libName = 'rss_it_library';
