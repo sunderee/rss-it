@@ -1,0 +1,23 @@
+name: rss_it
+description: "Simple open-source and cross-platform RSS feed aggregator"
+publish_to: 'none'
+version: 0.0.1+1
+
+environment:
+  sdk: ">=3.7.2"
+  flutter: ">=3.29.3"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  # Linter
+  flutter_lints: ^5.0.0
+
+  # Testing
+  flutter_test:
+    sdk: flutter
+  
+flutter:
+  uses-material-design: true
