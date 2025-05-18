@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
+import 'package:rss_it_library/models/parse_feed_model.dart';
 
 import 'rss_it_library_bindings_generated.dart';
 
@@ -15,15 +17,22 @@ Future<bool> validateFeedURL(String url) async {
   return validationResult;
 }
 
-Future<String> parseFeedURLs(String urls) async {
-  final cURLs = urls.toNativeUtf8().cast<Char>();
+Future<ParseFeedResponseModel> parseFeedURLs(List<String> urls) async {
+  final request = ParseFeedRequestModel(urls: urls);
+  final requestJson = jsonEncode(request.toJson());
+
+  final cURLs = requestJson.toNativeUtf8().cast<Char>();
   final parseResult = await Isolate.run(() => _bindings.parse(cURLs));
   final parseResultString = parseResult.cast<Utf8>().toDartString();
 
   malloc.free(cURLs);
   malloc.free(parseResult);
 
-  return parseResultString;
+  return Isolate.run(
+    () => ParseFeedResponseModel.fromJson(
+      jsonDecode(parseResultString) as Map<String, dynamic>,
+    ),
+  );
 }
 
 const String _libName = 'rss_it_library';
