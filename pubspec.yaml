@@ -15,6 +15,9 @@ dev_dependencies:
   # Linter
   flutter_lints: ^5.0.0
 
+  # Launcher icons generator
+  flutter_launcher_icons: ^0.14.3
+
   # Testing
   flutter_test:
     sdk: flutter
