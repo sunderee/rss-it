@@ -5,9 +5,6 @@ import 'package:rss_it/domain/data/feed_url.entity.dart';
 import 'package:rss_it/domain/providers/db_provider.dart';
 
 final class HiveDBProvider implements DBProvider {
-  static const String _feedURLsBoxName = 'feed_urls';
-  static const String _feedCacheBoxName = 'feed_cache';
-
   final Box<FeedURLEntity> _feedURLsBox;
   final Box<FeedCacheEntity> _feedCacheBox;
 
