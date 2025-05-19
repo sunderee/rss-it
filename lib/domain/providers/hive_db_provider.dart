@@ -1,42 +1,78 @@
 import 'package:collection/collection.dart';
-import 'package:dart_scope_functions/dart_scope_functions.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:rss_it/domain/data/feed_cache.entity.dart';
 import 'package:rss_it/domain/data/feed_url.entity.dart';
 import 'package:rss_it/domain/providers/db_provider.dart';
 
 final class HiveDBProvider implements DBProvider {
-  final Box<FeedURLEntity> _feedURLsBox;
+  static const String _feedURLsBoxName = 'feed_urls';
+  static const String _feedCacheBoxName = 'feed_cache';
 
-  HiveDBProvider({required Box<FeedURLEntity> feedURLsBoxInstance})
-    : _feedURLsBox = feedURLsBoxInstance;
+  final Box<FeedURLEntity> _feedURLsBox;
+  final Box<FeedCacheEntity> _feedCacheBox;
+
+  HiveDBProvider({
+    required Box<FeedURLEntity> feedURLsBox,
+    required Box<FeedCacheEntity> feedCacheBox,
+  }) : _feedURLsBox = feedURLsBox,
+       _feedCacheBox = feedCacheBox;
 
   @override
   Future<void> addFeedURL(String url) async {
-    // Check if box with this URL already exists
-    final feedURLExists = _feedURLsBox.values
-        .firstWhereOrNull((item) => item.url == url)
-        .let((it) => it != null);
-    if (feedURLExists) {
-      throw Exception('FeedURLEntity with URL $url already exists');
-    }
+    final feedURLs = _feedURLsBox.values.toList();
+    final order =
+        feedURLs.isEmpty
+            ? 0
+            : feedURLs.map((e) => e.order).reduce((a, b) => a > b ? a : b) + 1;
 
-    // Calculate new order
-    final newOrder = _feedURLsBox.values.length + 1;
-    final newFeedURL = FeedURLEntity(
-      url: url,
-      order: newOrder,
-      added: DateTime.now(),
+    await _feedURLsBox.add(
+      FeedURLEntity(url: url, order: order, added: DateTime.now()),
     );
-
-    // Save to DB
-    await _feedURLsBox.put(url, newFeedURL);
   }
 
   @override
-  List<FeedURLEntity> getFeedURLs() => _feedURLsBox.values.sorted(
-    (first, second) => first.order.compareTo(second.order),
-  );
+  Future<void> removeFeedURL(String url) async {
+    final feedURL = _feedURLsBox.values.firstWhere(
+      (feedURL) => feedURL.url == url,
+      orElse: () => throw Exception('Feed URL not found: $url'),
+    );
+
+    await _feedURLsBox.delete(feedURL.key);
+  }
 
   @override
-  Future<void> removeFeedURL(String url) => _feedURLsBox.delete(url);
+  List<FeedURLEntity> getFeedURLs() {
+    return _feedURLsBox.values.toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+  }
+
+  @override
+  Future<void> cacheFeed(FeedCacheEntity feed) async {
+    final existingKey =
+        _feedCacheBox.values
+            .firstWhereOrNull((cached) => cached.url == feed.url)
+            ?.key;
+
+    if (existingKey != null) {
+      await _feedCacheBox.put(existingKey, feed);
+    } else {
+      await _feedCacheBox.add(feed);
+    }
+  }
+
+  @override
+  Future<void> removeFeedCache(String url) async {
+    final cachedFeed = _feedCacheBox.values.firstWhereOrNull(
+      (cached) => cached.url == url,
+    );
+
+    if (cachedFeed != null) {
+      await _feedCacheBox.delete(cachedFeed.key);
+    }
+  }
+
+  @override
+  Future<FeedCacheEntity?> getFeedCache(String url) async {
+    return _feedCacheBox.values.firstWhereOrNull((cached) => cached.url == url);
+  }
 }

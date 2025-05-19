@@ -21,6 +21,8 @@ dependencies:
   # Utilities
   collection: ^1.19.1
   dart_scope_functions: ^1.0.2
+  simplest_logger: ^1.0.3
+  simplest_service_locator: ^2.0.1
 
 dev_dependencies:
   # Linter

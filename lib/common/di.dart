@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:hive_ce/hive.dart';
+import 'package:rss_it/domain/data/feed_cache.entity.dart';
 import 'package:rss_it/domain/data/feed_url.entity.dart';
 import 'package:rss_it/domain/providers/db_provider.dart';
 import 'package:rss_it/domain/providers/default_rss_library_provider.dart';
@@ -9,6 +10,10 @@ import 'package:rss_it/domain/providers/rss_library_provider.dart';
 import 'package:rss_it/domain/repositories/default_feed_repository.dart';
 import 'package:rss_it/domain/repositories/feed_repository.dart';
 import 'package:rss_it/hive/hive_registrar.g.dart';
+import 'package:rss_it/notifiers/feed_notifier.dart';
+import 'package:simplest_service_locator/simplest_service_locator.dart';
+
+final SimplestServiceLocator locator = SimplestServiceLocator.instance();
 
 Future<void> initializeDependencies() async {
   // Initialize HiveCE database and register adapters
@@ -18,10 +23,12 @@ Future<void> initializeDependencies() async {
 
   // Open HiveCE boxes
   final feedURLBox = await Hive.openBox<FeedURLEntity>('feed_url');
+  final feedCacheBox = await Hive.openBox<FeedCacheEntity>('feed_cache');
 
   // Providers
   final DBProvider dbProviderInstance = HiveDBProvider(
-    feedURLsBoxInstance: feedURLBox,
+    feedURLsBox: feedURLBox,
+    feedCacheBox: feedCacheBox,
   );
   final RssLibraryProvider rssLibraryProviderInstance =
       DefaultRSSLibraryProvider();
@@ -31,4 +38,12 @@ Future<void> initializeDependencies() async {
     dbProviderInstance: dbProviderInstance,
     rssLibraryProviderInstance: rssLibraryProviderInstance,
   );
+
+  // Notifiers
+  final FeedNotifier feedNotifierInstance = FeedNotifier(
+    repositoryInstance: feedRepositoryInstance,
+  );
+
+  // Register notifiers
+  locator.registerSingleton<FeedNotifier>(feedNotifierInstance);
 }
