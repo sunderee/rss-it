@@ -1,9 +1,8 @@
 import 'package:collection/collection.dart';
-import 'package:dart_scope_functions/dart_scope_functions.dart';
 import 'package:rss_it/domain/providers/db_provider.dart';
 import 'package:rss_it/domain/providers/rss_library_provider.dart';
 import 'package:rss_it/domain/repositories/feed_repository.dart';
-import 'package:rss_it_library/models/gofeed_feed_model.dart';
+import 'package:rss_it_library/models/parse_feed_model.dart';
 
 final class DefaultFeedRepository implements FeedRepository {
   final DBProvider _dbProvider;
@@ -31,7 +30,7 @@ final class DefaultFeedRepository implements FeedRepository {
   Future<void> removeFeedURL(String url) => _dbProvider.removeFeedURL(url);
 
   @override
-  Future<List<GofeedFeedModel>> getFeeds() async {
+  Future<List<ParseFeedResponseFeedModel>> getFeeds() async {
     // Get feed URLs from local persistence
     final feedURLs = _dbProvider.getFeedURLs();
 
@@ -40,14 +39,17 @@ final class DefaultFeedRepository implements FeedRepository {
       feedURLs.map((item) => item.url).toList(),
     );
 
-    // Map and match them
-    return feedURLs
-        .map(
-          (item) => parsedFeeds.feeds
-              .firstWhereOrNull((feed) => feed.url == item.url)
-              .letWithElse((it) => it.feed, orElse: null),
-        )
-        .whereType<GofeedFeedModel>()
-        .toList();
+    // Order feeds by feed URL
+    final orderedFeeds = <ParseFeedResponseFeedModel>[];
+    for (final feedURL in feedURLs) {
+      final parsedFeed = parsedFeeds.feeds.firstWhereOrNull(
+        (feed) => feed.url == feedURL.url,
+      );
+      if (parsedFeed != null) {
+        orderedFeeds.add(parsedFeed);
+      }
+    }
+
+    return orderedFeeds;
   }
 }
