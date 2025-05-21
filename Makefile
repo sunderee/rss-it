@@ -21,6 +21,10 @@ cleanup: ## Clean up build artifacts and dependencies
 	@flutter pub get
 	@echo "Cleanup complete"
 
-run-android-emulator: ## Run the application inside the default Android emulator
+run-android: ## Run the application inside the default Android emulator
 	@echo "Running application inside the default Android emulator..."
 	@flutter run --device-id=emulator-5554
+
+run-ios: ## Run the app on the first available iOS device
+	@echo "Running on iOS device..."
+	@flutter run --device-id=$(shell flutter devices | awk -F'• ' '/ios/ {print $$2}' | head -n1)
