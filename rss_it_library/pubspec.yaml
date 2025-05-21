@@ -1,0 +1,29 @@
+name: rss_it_library
+description: "Flutter plugin for parsing RSS/Atom/JSON feeds, powered by Go-based gofeed package"
+version: 0.0.1
+
+environment:
+  sdk: "3.8.0"
+  flutter: "3.32.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  ffi: ^2.1.4
+  plugin_platform_interface: ^2.1.8
+  simplest_logger: ^1.0.3
+
+dev_dependencies:
+  ffigen: ^13.0.0
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        ffiPlugin: true
+      ios:
+        ffiPlugin: true

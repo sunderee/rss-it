@@ -4,12 +4,27 @@ publish_to: 'none'
 version: 0.0.1+1
 
 environment:
-  sdk: ">=3.7.2"
-  flutter: ">=3.29.3"
+  sdk: "3.8.0"
+  flutter: "3.32.0"
 
 dependencies:
   flutter:
     sdk: flutter
+
+  # RSSit library
+  rss_it_library:
+    path: ./rss_it_library
+
+  # Local persistence
+  hive_ce: ^2.11.2
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+  # Utilities
+  collection: ^1.19.1
+  dart_scope_functions: ^1.0.2
+  simplest_logger: ^1.0.3
+  simplest_service_locator: ^2.0.1
 
 dev_dependencies:
   # Linter
@@ -17,6 +32,10 @@ dev_dependencies:
 
   # Launcher icons generator
   flutter_launcher_icons: ^0.14.3
+
+  # Generators
+  build_runner: ^2.4.15
+  hive_ce_generator: ^1.9.1
 
   # Testing
   flutter_test:
