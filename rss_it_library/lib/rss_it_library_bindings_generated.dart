@@ -34,17 +34,19 @@ class RssItLibraryBindings {
       _lookup<ffi.NativeFunction<ffi.Bool Function(ffi.Pointer<ffi.Char>)>>(
         'validate',
       );
-  late final _validate =
-      _validatePtr.asFunction<bool Function(ffi.Pointer<ffi.Char>)>();
+  late final _validate = _validatePtr
+      .asFunction<bool Function(ffi.Pointer<ffi.Char>)>();
 
   ffi.Pointer<ffi.Char> parse(ffi.Pointer<ffi.Char> feed_urls) {
     return _parse(feed_urls);
   }
 
-  late final _parsePtr = _lookup<
-    ffi.NativeFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)>
-  >('parse');
-  late final _parse =
-      _parsePtr
-          .asFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)>();
+  late final _parsePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)
+        >
+      >('parse');
+  late final _parse = _parsePtr
+      .asFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)>();
 }

@@ -47,6 +47,20 @@ final class FeedNotifier extends ChangeNotifier with SimplestLoggerMixin {
     }
   }
 
+  Future<void> attemptToAddFeed(String url) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repository.addFeedURL(url);
+      refreshFeeds();
+    } catch (error, stackTrace) {
+      logger.error('Error adding feed', error, stackTrace);
+      _error = error.toString();
+    }
+  }
+
   void _setupFeedsStream() {
     logger.info('Setting up feeds stream');
 

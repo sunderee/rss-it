@@ -6,18 +6,25 @@ import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 import 'package:rss_it_library/models/parse_feed_model.dart';
+import 'package:simplest_logger/simplest_logger.dart';
 
 import 'rss_it_library_bindings_generated.dart';
 
+const SimplestLogger logger = SimplestLogger('RSSitLibrary');
+
 Future<bool> validateFeedURL(String url) async {
+  logger.info('Validating feed URL: $url');
   final cURL = url.toNativeUtf8().cast<Char>();
   final validationResult = await Isolate.run(() => _bindings.validate(cURL));
 
   malloc.free(cURL);
+
+  logger.info('Validation result: $validationResult');
   return validationResult;
 }
 
 Future<ParseFeedResponseModel> parseFeedURLs(List<String> urls) async {
+  logger.info('Parsing feed URLs: $urls');
   final request = ParseFeedRequestModel(urls: urls);
   final requestJson = jsonEncode(request.toJson());
 
@@ -28,6 +35,7 @@ Future<ParseFeedResponseModel> parseFeedURLs(List<String> urls) async {
   malloc.free(cURLs);
   malloc.free(parseResult);
 
+  logger.info('Parse result: $parseResultString');
   return Isolate.run(
     () => ParseFeedResponseModel.fromJson(
       jsonDecode(parseResultString) as Map<String, dynamic>,

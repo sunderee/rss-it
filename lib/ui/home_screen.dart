@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:rss_it/common/di.dart';
 import 'package:rss_it/notifiers/feed_notifier.dart';
+import 'package:rss_it/ui/components/bottom_sheets/add_feed_bottom_sheet.dart';
+import 'package:rss_it/ui/components/feed/feed_list_tile.dart';
 
 final class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +18,7 @@ final class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _feedNotifier = locator.get<FeedNotifier>();
+    _feedNotifier.refreshFeeds();
     _feedNotifier.addListener(_feedNotifierListener);
   }
 
@@ -28,7 +31,18 @@ final class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('RSSit')),
+      appBar: AppBar(
+        title: const Text('RSSit'),
+        actions: [
+          IconButton(
+            onPressed: () => showModalBottomSheet<void>(
+              context: context,
+              builder: (context) => const AddFeedBottomSheet(),
+            ),
+            icon: const Icon(Icons.add),
+          ),
+        ],
+      ),
       body: ListenableBuilder(
         listenable: _feedNotifier,
         builder: (context, _) {
@@ -44,10 +58,7 @@ final class _HomeScreenState extends State<HomeScreen> {
             itemCount: _feedNotifier.feeds.length,
             itemBuilder: (context, index) {
               final feed = _feedNotifier.feeds[index];
-              return ListTile(
-                title: Text(feed.feed.title),
-                subtitle: Text(feed.feed.description),
-              );
+              return FeedListTile(feed: feed.feed);
             },
           );
         },

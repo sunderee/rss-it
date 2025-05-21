@@ -38,10 +38,11 @@ final class ParseFeedResponseModel {
       status: json['status'] as String,
       errors: (json['errors'] as List<dynamic>).cast<String>(),
       feeds:
-          (json['feeds'] as List<dynamic>)
-              .cast<Map<String, dynamic>>()
+          (json['feeds'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>()
               .map((item) => ParseFeedResponseFeedModel.fromJson(item))
-              .toList(),
+              .toList() ??
+          [],
     );
   }
 }

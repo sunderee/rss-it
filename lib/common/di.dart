@@ -1,6 +1,6 @@
-import 'dart:io';
-
 import 'package:hive_ce/hive.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:rss_it/domain/data/feed_cache.entity.dart';
 import 'package:rss_it/domain/data/feed_url.entity.dart';
 import 'package:rss_it/domain/providers/db_provider.dart';
@@ -17,8 +17,10 @@ final SimplestServiceLocator locator = SimplestServiceLocator.instance();
 
 Future<void> initializeDependencies() async {
   // Initialize HiveCE database and register adapters
+  final applicationDirectory = await getApplicationDocumentsDirectory();
+  final hiveDBPath = join(applicationDirectory.path, 'db');
   Hive
-    ..init(Directory.current.path)
+    ..init(hiveDBPath)
     ..registerAdapters();
 
   // Open HiveCE boxes

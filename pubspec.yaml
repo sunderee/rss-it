@@ -4,8 +4,8 @@ publish_to: 'none'
 version: 0.0.1+1
 
 environment:
-  sdk: ">=3.7.2"
-  flutter: ">=3.29.3"
+  sdk: "3.8.0"
+  flutter: "3.32.0"
 
 dependencies:
   flutter:
@@ -17,6 +17,8 @@ dependencies:
 
   # Local persistence
   hive_ce: ^2.11.2
+  path_provider: ^2.1.5
+  path: ^1.9.1
 
   # Utilities
   collection: ^1.19.1
