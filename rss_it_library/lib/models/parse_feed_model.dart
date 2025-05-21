@@ -34,15 +34,20 @@ final class ParseFeedResponseModel {
   });
 
   factory ParseFeedResponseModel.fromJson(Map<String, dynamic> json) {
+    // First check for 'data' field from the API
+    final feedsData = json.containsKey('data')
+        ? json['data'] as List<dynamic>
+        : json.containsKey('feeds')
+        ? json['feeds'] as List<dynamic>
+        : <dynamic>[];
+
     return ParseFeedResponseModel(
       status: json['status'] as String,
       errors: (json['errors'] as List<dynamic>).cast<String>(),
-      feeds:
-          (json['feeds'] as List<dynamic>?)
-              ?.cast<Map<String, dynamic>>()
-              .map((item) => ParseFeedResponseFeedModel.fromJson(item))
-              .toList() ??
-          [],
+      feeds: feedsData
+          .cast<Map<String, dynamic>>()
+          .map((item) => ParseFeedResponseFeedModel.fromJson(item))
+          .toList(),
     );
   }
 }

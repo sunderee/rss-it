@@ -41,20 +41,26 @@ final class _AddFeedBottomSheetState extends State<AddFeedBottomSheet>
         _animationController.reverse();
       },
       builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Enter feed URL'),
-            TextField(
-              controller: _controller,
-              textInputAction: TextInputAction.done,
-              keyboardType: TextInputType.url,
-              decoration: const InputDecoration(hintText: 'URL'),
-              onSubmitted: (value) {
-                _feedNotifier.attemptToAddFeed(value);
-              },
-            ),
-          ],
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Enter feed URL below. We will perform additional validation.',
+              ),
+              TextField(
+                controller: _controller,
+                textInputAction: TextInputAction.done,
+                keyboardType: TextInputType.url,
+                decoration: const InputDecoration(hintText: 'URL'),
+                onSubmitted: (value) {
+                  _feedNotifier.attemptToAddFeed(value);
+                },
+              ),
+            ],
+          ),
         );
       },
     );

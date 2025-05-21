@@ -12,6 +12,15 @@ import 'rss_it_library_bindings_generated.dart';
 
 const SimplestLogger logger = SimplestLogger('RSSitLibrary');
 
+void initializeLogger(bool recordLibraryLogs) {
+  if (recordLibraryLogs) {
+    SimplestLogger.setLevel(SimplestLoggerLevel.all);
+    SimplestLogger.useColors(false);
+  } else {
+    SimplestLogger.setLevel(SimplestLoggerLevel.none);
+  }
+}
+
 Future<bool> validateFeedURL(String url) async {
   logger.info('Validating feed URL: $url');
   final cURL = url.toNativeUtf8().cast<Char>();
