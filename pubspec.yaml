@@ -20,6 +20,9 @@ dependencies:
   path_provider: ^2.1.5
   path: ^1.9.1
 
+  # UI related
+  webview_flutter: ^4.13.0
+
   # Utilities
   collection: ^1.19.1
   dart_scope_functions: ^1.0.2

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/mmcdole/gofeed"
@@ -38,21 +40,23 @@ func (p *RSSParser) ParseFeeds(request *proto.ParseFeedsRequest) proto.ParseFeed
 				return
 			}
 
-			var description *string = nil
+			var description string = ""
 			if feed.Description != "" {
-				description = &feed.Description
+				description = feed.Description
+				description = cleanString(description)
 			}
 
-			var image *string = nil
+			var image string = ""
 			if feed.Image != nil {
-				image = &feed.Image.URL
+				image = feed.Image.URL
 			}
 
 			var items []*proto.FeedItem = make([]*proto.FeedItem, 0, len(feed.Items))
 			for _, item := range feed.Items {
-				var description *string = nil
+				var description string = ""
 				if item.Description != "" {
-					description = &item.Description
+					description = item.Description
+					description = cleanString(description)
 				}
 
 				var link *string = nil
@@ -67,7 +71,7 @@ func (p *RSSParser) ParseFeeds(request *proto.ParseFeedsRequest) proto.ParseFeed
 
 				items = append(items, &proto.FeedItem{
 					Title:       item.Title,
-					Description: description,
+					Description: &description,
 					Link:        link,
 					Image:       image,
 				})
@@ -76,8 +80,8 @@ func (p *RSSParser) ParseFeeds(request *proto.ParseFeedsRequest) proto.ParseFeed
 			resultFeeds = append(resultFeeds, &proto.Feed{
 				Url:         feedURL,
 				Title:       feed.Title,
-				Description: description,
-				Image:       image,
+				Description: &description,
+				Image:       &image,
 				Items:       items,
 			})
 		}(url)
@@ -100,4 +104,54 @@ func (p *RSSParser) ParseFeeds(request *proto.ParseFeedsRequest) proto.ParseFeed
 		Errors: resultErrors,
 		Feeds:  resultFeeds,
 	}
+}
+
+func cleanString(input string) string {
+	htmlTagRegex := regexp.MustCompile(`<[^>]*>`)
+	result := htmlTagRegex.ReplaceAllString(input, "")
+
+	// Decode common HTML entities
+	entityReplacements := map[string]string{
+		"&amp;":  "&",
+		"&lt;":   "<",
+		"&gt;":   ">",
+		"&quot;": "\"",
+		"&apos;": "'",
+		"&nbsp;": " ",
+		"&#39;":  "'",
+		"&#34;":  "\"",
+	}
+
+	for entity, replacement := range entityReplacements {
+		result = strings.ReplaceAll(result, entity, replacement)
+	}
+
+	// Clean up whitespace issues
+	return cleanWhitespace(result)
+}
+
+func cleanWhitespace(input string) string {
+	// Replace multiple whitespace characters with single space
+	multiSpaceRegex := regexp.MustCompile(`\s+`)
+	input = multiSpaceRegex.ReplaceAllString(input, " ")
+
+	// Remove spaces before punctuation
+	spaceBeforePunctRegex := regexp.MustCompile(`\s+([,.!?;:])`)
+	input = spaceBeforePunctRegex.ReplaceAllString(input, "$1")
+
+	// Ensure single space after punctuation (but not multiple)
+	spaceAfterPunctRegex := regexp.MustCompile(`([,.!?;:])\s*`)
+	input = spaceAfterPunctRegex.ReplaceAllString(input, "$1 ")
+
+	// Remove space before closing brackets/parentheses
+	spaceBeforeClosingRegex := regexp.MustCompile(`\s+([)\]}])`)
+	input = spaceBeforeClosingRegex.ReplaceAllString(input, "$1")
+
+	// Remove space after opening brackets/parentheses
+	spaceAfterOpeningRegex := regexp.MustCompile(`([(\[{])\s+`)
+	input = spaceAfterOpeningRegex.ReplaceAllString(input, "$1")
+
+	// Trim leading and trailing whitespace
+	input = strings.TrimSpace(input)
+	return input
 }
