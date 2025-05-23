@@ -48,7 +48,7 @@ func (p *RSSParser) ParseFeeds(request *proto.ParseFeedsRequest) proto.ParseFeed
 				image = &feed.Image.URL
 			}
 
-			var items []*proto.FeedItem = make([]*proto.FeedItem, len(feed.Items))
+			var items []*proto.FeedItem = make([]*proto.FeedItem, 0, len(feed.Items))
 			for _, item := range feed.Items {
 				var description *string = nil
 				if item.Description != "" {
