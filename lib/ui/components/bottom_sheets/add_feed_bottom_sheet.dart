@@ -56,7 +56,7 @@ final class _AddFeedBottomSheetState extends State<AddFeedBottomSheet>
                 keyboardType: TextInputType.url,
                 decoration: const InputDecoration(hintText: 'URL'),
                 onSubmitted: (value) {
-                  _feedNotifier.attemptToAddFeed(value);
+                  _feedNotifier.addFeedURL(value);
                 },
               ),
             ],
