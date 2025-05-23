@@ -3,6 +3,7 @@ import 'package:rss_it/common/di.dart';
 import 'package:rss_it/notifiers/feed_notifier.dart';
 import 'package:rss_it/ui/components/bottom_sheets/add_feed_bottom_sheet.dart';
 import 'package:rss_it/ui/components/feed/feed_list_tile.dart';
+import 'package:rss_it/ui/feed_screen.dart';
 import 'package:rss_it_library/protos/feed.pbenum.dart';
 
 final class HomeScreen extends StatefulWidget {
@@ -83,7 +84,10 @@ final class _HomeScreenState extends State<HomeScreen> {
               itemCount: feeds.length,
               itemBuilder: (context, index) {
                 final feed = feeds.elementAt(index);
-                return FeedListTile(feed: feed);
+                return FeedListTile(
+                  feed: feed,
+                  onPressed: () => FeedScreen.navigateTo(context, feed: feed),
+                );
               },
             ),
           );

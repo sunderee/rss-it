@@ -2,20 +2,18 @@ import 'package:dart_scope_functions/dart_scope_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
 
-final class FeedListTile extends StatelessWidget {
-  final Feed feed;
-  final VoidCallback onPressed;
+final class FeedItemListTile extends StatelessWidget {
+  final FeedItem item;
 
-  const FeedListTile({super.key, required this.feed, required this.onPressed});
+  const FeedItemListTile({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(feed.title),
-      subtitle: feed.description
+      title: Text(item.title),
+      subtitle: item.description
           .takeIf((it) => it.isNotEmpty)
           ?.let((it) => Text(it, maxLines: 2, overflow: TextOverflow.ellipsis)),
-      onTap: onPressed,
     );
   }
 }
