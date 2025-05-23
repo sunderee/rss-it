@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
@@ -23,13 +24,21 @@ Future<bool> validateFeedURL(String url) async {
     // Call the C function
     final rawValidationResult = _bindings.validate(cData, dataBuffer.length);
 
-    // Convert C Pointer<Char> back to Dart List<int>
+    // Read the length (first 4 bytes)
+    final lengthBytes = <int>[];
+    for (int i = 0; i < 4; i++) {
+      lengthBytes.add(rawValidationResult[i]);
+    }
+
+    // Convert 4 bytes to uint32 (little endian)
+    final uint8List = Uint8List.fromList(lengthBytes);
+    final byteData = ByteData.view(uint8List.buffer);
+    final dataLength = byteData.getUint32(0, Endian.little);
+
+    // Read exactly dataLength bytes after the length prefix
     final List<int> resultData = [];
-    int i = 0;
-    while (rawValidationResult[i] != 0 && i < 1024) {
-      // Safety limit
+    for (int i = 4; i < 4 + dataLength; i++) {
       resultData.add(rawValidationResult[i]);
-      i++;
     }
 
     final validationResult = ValidateFeedResponse.fromBuffer(resultData);
@@ -58,13 +67,21 @@ Future<ParseFeedsResponse> parseFeedURLs(List<String> urls) async {
     // Call the C function
     final rawParseResult = _bindings.parse(cData, dataBuffer.length);
 
-    // Convert C Pointer<Char> back to Dart List<int>
+    // Read the length (first 4 bytes)
+    final lengthBytes = <int>[];
+    for (int i = 0; i < 4; i++) {
+      lengthBytes.add(rawParseResult[i]);
+    }
+
+    // Convert 4 bytes to uint32 (little endian)
+    final uint8List = Uint8List.fromList(lengthBytes);
+    final byteData = ByteData.view(uint8List.buffer);
+    final dataLength = byteData.getUint32(0, Endian.little);
+
+    // Read exactly dataLength bytes after the length prefix
     final List<int> resultData = [];
-    int i = 0;
-    while (rawParseResult[i] != 0 && i < 10240) {
-      // Larger safety limit for parse results
+    for (int i = 4; i < 4 + dataLength; i++) {
       resultData.add(rawParseResult[i]);
-      i++;
     }
 
     // Parse protobuf response

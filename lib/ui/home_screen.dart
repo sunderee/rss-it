@@ -56,12 +56,15 @@ final class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: Text('No feeds found'));
           }
 
-          return ListView.builder(
-            itemCount: feeds.length,
-            itemBuilder: (context, index) {
-              final feed = feeds.elementAt(index);
-              return FeedListTile(feed: feed);
-            },
+          return RefreshIndicator(
+            onRefresh: () => _feedNotifier.fetchFeeds(),
+            child: ListView.builder(
+              itemCount: feeds.length,
+              itemBuilder: (context, index) {
+                final feed = feeds.elementAt(index);
+                return FeedListTile(feed: feed);
+              },
+            ),
           );
         },
       ),

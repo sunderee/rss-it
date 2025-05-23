@@ -19,6 +19,7 @@ cleanup: ## Clean up build artifacts and dependencies
 	@rm -rf ios/Pods
 	@rm -f ios/Podfile.lock
 	@flutter pub get
+	@dart run build_runner build --delete-conflicting-outputs
 	@echo "Cleanup complete"
 
 run-android: ## Run the application inside the default Android emulator
