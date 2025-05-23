@@ -26,27 +26,29 @@ class RssItLibraryBindings {
     ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup,
   ) : _lookup = lookup;
 
-  bool validate(ffi.Pointer<ffi.Char> feed_url) {
-    return _validate(feed_url);
+  ffi.Pointer<ffi.Char> validate(ffi.Pointer<ffi.Char> data, int length) {
+    return _validate(data, length);
   }
 
   late final _validatePtr =
-      _lookup<ffi.NativeFunction<ffi.Bool Function(ffi.Pointer<ffi.Char>)>>(
-        'validate',
-      );
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>, ffi.Int)
+        >
+      >('validate');
   late final _validate = _validatePtr
-      .asFunction<bool Function(ffi.Pointer<ffi.Char>)>();
+      .asFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>, int)>();
 
-  ffi.Pointer<ffi.Char> parse(ffi.Pointer<ffi.Char> feed_urls) {
-    return _parse(feed_urls);
+  ffi.Pointer<ffi.Char> parse(ffi.Pointer<ffi.Char> data, int length) {
+    return _parse(data, length);
   }
 
   late final _parsePtr =
       _lookup<
         ffi.NativeFunction<
-          ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)
+          ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>, ffi.Int)
         >
       >('parse');
   late final _parse = _parsePtr
-      .asFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)>();
+      .asFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>, int)>();
 }

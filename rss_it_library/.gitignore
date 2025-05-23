@@ -32,3 +32,10 @@ build/
 
 # Prebuild binaries
 prebuild/
+
+# Generated files
+**/*.pb.go
+**/*.pb.dart
+**/*.pbenum.dart
+**/*.pbjson.dart
+**/*.pbserver.dart

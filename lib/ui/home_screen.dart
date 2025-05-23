@@ -3,6 +3,7 @@ import 'package:rss_it/common/di.dart';
 import 'package:rss_it/notifiers/feed_notifier.dart';
 import 'package:rss_it/ui/components/bottom_sheets/add_feed_bottom_sheet.dart';
 import 'package:rss_it/ui/components/feed/feed_list_tile.dart';
+import 'package:rss_it_library/protos/feed.pbenum.dart';
 
 final class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,8 +19,8 @@ final class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _feedNotifier = locator.get<FeedNotifier>();
-    _feedNotifier.refreshFeeds();
     _feedNotifier.addListener(_feedNotifierListener);
+    _feedNotifier.fetchFeeds();
   }
 
   @override
@@ -50,16 +51,20 @@ final class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: CircularProgressIndicator.adaptive());
           }
 
-          if (_feedNotifier.feeds.isEmpty) {
+          final feeds = _feedNotifier.data?.feeds.map((item) => item) ?? [];
+          if (feeds.isEmpty) {
             return const Center(child: Text('No feeds found'));
           }
 
-          return ListView.builder(
-            itemCount: _feedNotifier.feeds.length,
-            itemBuilder: (context, index) {
-              final feed = _feedNotifier.feeds[index];
-              return FeedListTile(feed: feed.feed);
-            },
+          return RefreshIndicator(
+            onRefresh: () => _feedNotifier.fetchFeeds(),
+            child: ListView.builder(
+              itemCount: feeds.length,
+              itemBuilder: (context, index) {
+                final feed = feeds.elementAt(index);
+                return FeedListTile(feed: feed);
+              },
+            ),
           );
         },
       ),
@@ -67,10 +72,30 @@ final class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _feedNotifierListener() {
-    final error = _feedNotifier.error;
-    if (error != null) {
+    if (!_feedNotifier.isLoading && _feedNotifier.data != null) {
+      if (_feedNotifier.data!.errors.isNotEmpty) {
+        final errors = _feedNotifier.data!.errors.join(', ');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Some errors occurred while fetching feeds: $errors'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+
+        return;
+      }
+
+      final statusMessage = switch (_feedNotifier.data!.status) {
+        ParseFeedsStatus.SUCCESS => 'Feeds fetched successfully',
+        ParseFeedsStatus.PARTIAL => 'Feeds fetched partially',
+        ParseFeedsStatus.ERROR => 'Some errors occurred while fetching feeds',
+        _ => 'Unknown status',
+      };
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), behavior: SnackBarBehavior.floating),
+        SnackBar(
+          content: Text(statusMessage),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
