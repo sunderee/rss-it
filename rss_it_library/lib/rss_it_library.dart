@@ -1,55 +1,38 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
-import 'dart:isolate';
 
-import 'package:ffi/ffi.dart';
-import 'package:rss_it_library/models/parse_feed_model.dart';
-import 'package:simplest_logger/simplest_logger.dart';
+import 'package:rss_it_library/protos/feed.pb.dart';
 
 import 'rss_it_library_bindings_generated.dart';
 
-const SimplestLogger logger = SimplestLogger('RSSitLibrary');
-
-void initializeLogger(bool recordLibraryLogs) {
-  if (recordLibraryLogs) {
-    SimplestLogger.setLevel(SimplestLoggerLevel.all);
-    SimplestLogger.useColors(false);
-  } else {
-    SimplestLogger.setLevel(SimplestLoggerLevel.none);
-  }
-}
-
 Future<bool> validateFeedURL(String url) async {
-  logger.info('Validating feed URL: $url');
-  final cURL = url.toNativeUtf8().cast<Char>();
-  final validationResult = await Isolate.run(() => _bindings.validate(cURL));
+  final data = ValidateFeedRequest(url: url);
+  final dataBuffer = data.writeToBuffer();
 
-  malloc.free(cURL);
+  final rawValidationResult = _bindings.validate(dataBuffer, dataBuffer.length);
+  final validationResult = ValidateFeedResponse.fromBuffer(rawValidationResult);
 
-  logger.info('Validation result: $validationResult');
-  return validationResult;
+  return validationResult.valid;
 }
 
-Future<ParseFeedResponseModel> parseFeedURLs(List<String> urls) async {
-  logger.info('Parsing feed URLs: $urls');
-  final request = ParseFeedRequestModel(urls: urls);
-  final requestJson = jsonEncode(request.toJson());
+Future<void> parseFeedURLs(List<String> urls) async {
+  // final request = ParseFeedsRequest(urls: urls);
+  // final requestJson = jsonEncode(request.toJson());
 
-  final cURLs = requestJson.toNativeUtf8().cast<Char>();
-  final parseResult = await Isolate.run(() => _bindings.parse(cURLs));
-  final parseResultString = parseResult.cast<Utf8>().toDartString();
+  // final cURLs = requestJson.toNativeUtf8().cast<Char>();
+  // final parseResult = await Isolate.run(() => _bindings.parse(cURLs));
+  // final parseResultString = parseResult.cast<Utf8>().toDartString();
 
-  malloc.free(cURLs);
-  malloc.free(parseResult);
+  // malloc.free(cURLs);
+  // malloc.free(parseResult);
 
-  logger.info('Parse result: $parseResultString');
-  return Isolate.run(
-    () => ParseFeedResponseModel.fromJson(
-      jsonDecode(parseResultString) as Map<String, dynamic>,
-    ),
-  );
+  // logger.info('Parse result: $parseResultString');
+  // return Isolate.run(
+  //   () => ParseFeedResponseModel.fromJson(
+  //     jsonDecode(parseResultString) as Map<String, dynamic>,
+  //   ),
+  // );
 }
 
 const String _libName = 'rss_it_library';

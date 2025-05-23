@@ -4,22 +4,23 @@ import (
 	"sync"
 
 	"github.com/mmcdole/gofeed"
+	"github.com/sunderee/rss-it/proto"
 )
 
 type RSSParser struct {
 	parser *gofeed.Parser
 }
 
-func (p *RSSParser) ParseFeeds(request ParseFeedsRequest) ParseFeedsResponse {
+func (p *RSSParser) ParseFeeds(request *proto.ParseFeedsRequest) proto.ParseFeedsResponse {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
-	resultFeeds := make([]Feed, 0)
+	resultFeeds := make([]*proto.Feed, 0)
 	resultErrors := make([]string, 0)
 
 	semaphore := make(chan struct{}, 10)
 
-	for _, url := range request.URLs {
+	for _, url := range request.Urls {
 		wg.Add(1)
 		semaphore <- struct{}{}
 
@@ -37,28 +38,66 @@ func (p *RSSParser) ParseFeeds(request ParseFeedsRequest) ParseFeedsResponse {
 				return
 			}
 
-			resultFeeds = append(resultFeeds, Feed{
-				URL:  feedURL,
-				Feed: feed,
+			var description *string = nil
+			if feed.Description != "" {
+				description = &feed.Description
+			}
+
+			var image *string = nil
+			if feed.Image != nil {
+				image = &feed.Image.URL
+			}
+
+			var items []*proto.FeedItem = make([]*proto.FeedItem, len(feed.Items))
+			for _, item := range feed.Items {
+				var description *string = nil
+				if item.Description != "" {
+					description = &item.Description
+				}
+
+				var link *string = nil
+				if item.Link != "" {
+					link = &item.Link
+				}
+
+				var image *string = nil
+				if item.Image != nil {
+					image = &item.Image.URL
+				}
+
+				items = append(items, &proto.FeedItem{
+					Title:       item.Title,
+					Description: description,
+					Link:        link,
+					Image:       image,
+				})
+			}
+
+			resultFeeds = append(resultFeeds, &proto.Feed{
+				Url:         feedURL,
+				Title:       feed.Title,
+				Description: description,
+				Image:       image,
+				Items:       items,
 			})
 		}(url)
 	}
 
 	wg.Wait()
 
-	var status Status
+	var status proto.ParseFeedsStatus
 	switch {
 	case len(resultFeeds) == 0:
-		status = StatusError
-	case len(resultFeeds) == len(request.URLs):
-		status = StatusSuccess
+		status = proto.ParseFeedsStatus_ERROR
+	case len(resultFeeds) == len(request.Urls):
+		status = proto.ParseFeedsStatus_SUCCESS
 	default:
-		status = StatusPartial
+		status = proto.ParseFeedsStatus_PARTIAL
 	}
 
-	return ParseFeedsResponse{
+	return proto.ParseFeedsResponse{
 		Status: status,
 		Errors: resultErrors,
-		Data:   resultFeeds,
+		Feeds:  resultFeeds,
 	}
 }
