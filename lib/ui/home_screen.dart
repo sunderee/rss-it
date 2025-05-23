@@ -36,11 +36,9 @@ final class _HomeScreenState extends State<HomeScreen> {
         title: const Text('RSSit'),
         actions: [
           IconButton(
-            onPressed: () => showModalBottomSheet<void>(
-              context: context,
-              builder: (context) => const AddFeedBottomSheet(),
-            ),
+            onPressed: () => _showAddFeedBottomSheet(context),
             icon: const Icon(Icons.add),
+            tooltip: 'Add RSS Feed',
           ),
         ],
       ),
@@ -53,7 +51,30 @@ final class _HomeScreenState extends State<HomeScreen> {
 
           final feeds = _feedNotifier.data?.feeds.map((item) => item) ?? [];
           if (feeds.isEmpty) {
-            return const Center(child: Text('No feeds found'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.rss_feed_outlined,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                  Text(
+                    'No feeds yet',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    'Add your first RSS feed to get started',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           return RefreshIndicator(
@@ -68,6 +89,15 @@ final class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
+    );
+  }
+
+  void _showAddFeedBottomSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => const AddFeedBottomSheet(),
     );
   }
 
