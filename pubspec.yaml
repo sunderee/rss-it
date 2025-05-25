@@ -28,6 +28,8 @@ dependencies:
   dart_scope_functions: ^1.0.2
   simplest_logger: ^1.0.3
   simplest_service_locator: ^2.0.1
+  url_launcher: ^6.3.1
+  share_plus: ^11.0.0
 
 dev_dependencies:
   # Linter

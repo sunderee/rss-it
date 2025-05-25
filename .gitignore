@@ -48,3 +48,6 @@ app.*.map.json
 # Generated files
 **/*.g.dart
 **/*.g.yaml
+
+# Symbols
+symbols/

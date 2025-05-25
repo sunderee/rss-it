@@ -26,6 +26,16 @@ run-android: ## Run the application inside the default Android emulator
 	@echo "Running application inside the default Android emulator..."
 	@flutter run --device-id=emulator-5554
 
+build-android: cleanup ## Build the application for Android
+	@echo "Building Android application (app bundle)..."
+	@flutter build appbundle --release --obfuscate --split-debug-info=./symbols
+	@say "Android build complete"
+
 run-ios: ## Run the app on the first available iOS device
 	@echo "Running on iOS device..."
 	@flutter run --device-id=$(shell flutter devices | awk -F'• ' '/ios/ {print $$2}' | head -n1)
+
+build-ios: cleanup ## Build the application for iOS
+	@echo "Building iOS application IPA..."
+	@flutter build ipa --release --obfuscate --split-debug-info=./symbols
+	@say "iOS build complete"
