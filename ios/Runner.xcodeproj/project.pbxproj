@@ -105,7 +105,6 @@
 				65A0643E55927A76CB414809 /* Pods-RunnerTests.release.xcconfig */,
 				477DC2539DD40F9785EC2370 /* Pods-RunnerTests.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -481,7 +480,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.peteraleksanderbizjak.rssIt;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peteraleksanderbizjak.rssit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -672,7 +671,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.peteraleksanderbizjak.rssIt;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peteraleksanderbizjak.rssit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -703,7 +702,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.peteraleksanderbizjak.rssIt;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peteraleksanderbizjak.rssit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
