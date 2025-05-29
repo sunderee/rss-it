@@ -1,0 +1,43 @@
+group = "com.peteraleksanderbizjak.rss_it_library"
+version = "1.0"
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.7.0")
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.android.library"
+
+android {
+    namespace = "com.peteraleksanderbizjak.rss_it_library"
+    compileSdk = 36
+    ndkVersion = "27.0.12077973"
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ["${project.projectDir}/../prebuild/Android"]
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    defaultConfig {
+        minSdk = 30
+    }
+}

@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "github.com/sunderee/rss-it/proto";
+
+message ValidateFeedRequest {
+  string url = 1;
+}
+
+message ValidateFeedResponse {
+  bool valid = 1;
+}
+
+message ParseFeedsRequest {
+  repeated string urls = 1;
+}
+
+message ParseFeedsResponse {
+  ParseFeedsStatus status = 1;
+  repeated Feed feeds = 2;
+  repeated string errors = 3;
+}
+
+enum ParseFeedsStatus {
+  SUCCESS = 0;
+  ERROR = 1;
+  PARTIAL = 2;
+}
+
+message Feed {
+  string url = 1;
+  string title = 2;
+  optional string description = 3;
+  optional string image = 5;
+  repeated FeedItem items = 6;
+}
+
+message FeedItem {
+  string title = 1;
+  optional string description = 2;
+  optional string link = 3;
+  optional string image = 4;
+  optional string published = 5;
+}

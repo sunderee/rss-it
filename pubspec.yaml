@@ -1,0 +1,48 @@
+name: rss_it
+description: "Simple open-source and cross-platform RSS feed aggregator"
+publish_to: 'none'
+version: 0.0.1+4
+
+environment:
+  sdk: "3.8.0"
+  flutter: "3.32.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Architecture
+  simplest_service_locator: ^2.0.1
+
+  # RSSit library
+  rss_it_library:
+    path: ./rss_it_library
+
+  # Local persistence
+  sqflite: ^2.4.2
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+  # UI related
+  new_loading_indicator: ^1.0.2
+  webview_flutter: ^4.13.0
+
+  # Sharing, URL launcher
+  share_plus: ^11.0.0
+  url_launcher: ^6.3.1
+
+  # Utilities
+  collection: ^1.19.1
+  dart_scope_functions: ^1.0.2
+  simplest_logger: ^1.0.3
+  
+
+dev_dependencies:
+  # Linter
+  flutter_lints: ^5.0.0
+
+  # Launcher icons generator
+  flutter_launcher_icons: ^0.14.3
+  
+flutter:
+  uses-material-design: true
