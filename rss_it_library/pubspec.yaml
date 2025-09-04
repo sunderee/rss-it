@@ -3,8 +3,8 @@ description: "Flutter plugin for parsing RSS/Atom/JSON feeds, powered by Go-base
 version: 0.0.1
 
 environment:
-  sdk: "3.8.0"
-  flutter: "3.32.0"
+  sdk: ">=3.9.2"
+  flutter: ">=3.35.3"
 
 dependencies:
   flutter:
@@ -12,11 +12,11 @@ dependencies:
   
   ffi: ^2.1.4
   plugin_platform_interface: ^2.1.8
-  protobuf: ^4.1.0
+  protobuf: ^4.2.0
 
 dev_dependencies:
-  ffigen: ^13.0.0
-  flutter_lints: ^5.0.0
+  ffigen: ^19.1.0
+  flutter_lints: ^6.0.0
 
 flutter:
   plugin:
