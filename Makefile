@@ -1,4 +1,4 @@
-.PHONY: help cleanup
+.PHONY: help cleanup generate test
 
 .DEFAULT_GOAL := help
 BLUE := \033[34m
@@ -20,6 +20,25 @@ cleanup: ## Clean up build artifacts and dependencies
 	@rm -f ios/Podfile.lock
 	@flutter pub get
 	@echo "Cleanup complete"
+
+generate: ## Generate code (protobuf, FFI bindings)
+	@echo "Generating code..."
+	@cd rss_it_library/src && ./build-protos.sh
+	@cd rss_it_library/lib/protos && protoc --dart_out=. feed.proto
+	@cd rss_it_library && dart run ffigen --config ffigen.yaml
+	@echo "Code generation complete"
+
+test: ## Run all tests (Go library, Dart library, application, integration)
+	@echo "Running all tests..."
+	@echo ""
+	@echo "=== Running Go library tests ==="
+	@cd rss_it_library/src && go test -v ./... || (echo "Go tests failed" && exit 1)
+	@echo ""
+	@echo "=== Running Dart library tests ==="
+	@cd rss_it_library && flutter test test/ || (echo "Dart library tests failed" && exit 1)
+	@echo ""
+	@echo "=== Running application tests ==="
+	@flutter test test/ || (echo "Application tests failed" && exit 1)
 
 run-android: ## Run the application inside the default Android emulator
 	@echo "Running application inside the default Android emulator..."

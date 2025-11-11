@@ -6,16 +6,23 @@ import 'package:rss_it/domain/data/feed_item_entity.dart';
 import 'package:rss_it/domain/providers/db_provider.dart';
 import 'package:rss_it/domain/repositories/feed_repository.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
-import 'package:rss_it_library/rss_it_library.dart';
+import 'package:rss_it_library/rss_it_library.dart' as rss_it_library;
 import 'package:simplest_logger/simplest_logger.dart';
 
 final class DefaultFeedRepository
     with SimplestLoggerMixin
     implements FeedRepository {
   final DBProvider _dbProvider;
+  final Future<bool> Function(String) _validateFeedURL;
+  final Future<ParseFeedsResponse> Function(List<String>) _parseFeedURLs;
 
-  DefaultFeedRepository({required DBProvider dbProviderInstance})
-    : _dbProvider = dbProviderInstance;
+  DefaultFeedRepository({
+    required DBProvider dbProviderInstance,
+    Future<bool> Function(String)? validateFeedURL,
+    Future<ParseFeedsResponse> Function(List<String>)? parseFeedURLs,
+  }) : _dbProvider = dbProviderInstance,
+       _validateFeedURL = validateFeedURL ?? rss_it_library.validateFeedURL,
+       _parseFeedURLs = parseFeedURLs ?? rss_it_library.parseFeedURLs;
 
   @override
   Future<FeedValidationStatus> validateFeed(String url) async {
@@ -26,9 +33,9 @@ final class DefaultFeedRepository
       return FeedValidationStatus.feedExists;
     }
 
-    final validationStatus = await validateFeedURL(url);
+    final validationStatus = await _validateFeedURL(url);
     logger.info('...feed $url validation status: $validationStatus');
-    return validationStatus == validationStatus
+    return validationStatus
         ? FeedValidationStatus.valid
         : FeedValidationStatus.feedInvalid;
   }
@@ -36,7 +43,7 @@ final class DefaultFeedRepository
   @override
   Future<Iterable<Feed>> getFeedsFromRemote(List<String> urls) async {
     logger.info('Fetching feeds from remote ($urls)...');
-    final result = await parseFeedURLs(urls);
+    final result = await _parseFeedURLs(urls);
 
     (switch (result.status) {
       ParseFeedsStatus.SUCCESS => logger.info('...status: successful'),

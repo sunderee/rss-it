@@ -5,7 +5,7 @@ import 'package:rss_it/domain/data/feed_item_entity.dart';
 import 'package:rss_it/domain/repositories/feed_repository.dart';
 import 'package:simplest_logger/simplest_logger.dart';
 
-final class FeedNotifier extends ChangeNotifier with SimplestLoggerMixin {
+class FeedNotifier extends ChangeNotifier with SimplestLoggerMixin {
   static const _refreshInterval = Duration(minutes: 1);
 
   final FeedRepository _feedRepository;
@@ -41,10 +41,11 @@ final class FeedNotifier extends ChangeNotifier with SimplestLoggerMixin {
     notifyListeners();
     logger.info('...feeds from DB count: ${_feeds.length}');
 
-    if (forceRefresh ||
-        (_lastRefreshTime != null &&
-            _lastRefreshTime!.difference(DateTime.now()).inSeconds.abs() >
-                _refreshInterval.inSeconds)) {
+    final shouldRefresh = forceRefresh ||
+        _lastRefreshTime == null ||
+        (DateTime.now().difference(_lastRefreshTime!).inSeconds >
+            _refreshInterval.inSeconds);
+    if (shouldRefresh) {
       logger.info('...refreshing feeds...');
       final persistedFeedURLs = _feeds.map((item) => item.url);
       if (persistedFeedURLs.isNotEmpty) {
