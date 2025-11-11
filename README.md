@@ -16,7 +16,7 @@ You can find a Makefile which contains instructions on cleanups, running the app
 
 RSSit uses `gofeed` (Go-based library) for validating and parsing RSS/Atom/JSON feeds. This is facilitated by the FFI Flutter plugin `rss_it_library`, which uses protocol buffers for efficient data serialization/deserialization.
 
-This application was developed as part of an experiment to prove/disprove the practicality of Go for the development of FFI Flutter plugins, and as such, is more of an proof-of-concept rather than an actual production-grade application. Because of that, you won't see any tests, nor will you see much documentation in the codebase. Obviously I'm willing to change that in the future, but for now, I'm leaving the application as-is.
+This application was developed as part of an experiment to prove/disprove the practicality of Go for the development of FFI Flutter plugins, and as such, is more of an proof-of-concept rather than an actual production-grade application. 
 
 ## License
 
