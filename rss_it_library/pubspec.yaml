@@ -4,7 +4,7 @@ version: 0.0.1
 
 environment:
   sdk: ">=3.9.2"
-  flutter: ">=3.35.3"
+  flutter: ">=3.35.7"
 
 dependencies:
   flutter:
@@ -12,10 +12,10 @@ dependencies:
   
   ffi: ^2.1.4
   plugin_platform_interface: ^2.1.8
-  protobuf: ^4.2.0
+  protobuf: ^5.1.0
 
 dev_dependencies:
-  ffigen: ^19.1.0
+  ffigen: ^20.0.0
   flutter_lints: ^6.0.0
 
 flutter:

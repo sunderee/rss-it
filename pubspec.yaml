@@ -5,14 +5,14 @@ version: 1.0.0+5
 
 environment:
   sdk: ">=3.9.2"
-  flutter: ">=3.35.3"
+  flutter: ">=3.35.7"
 
 dependencies:
   flutter:
     sdk: flutter
 
   # Architecture
-  simplest_service_locator: ^2.0.1
+  simplest_service_locator: ^2.0.2
 
   # RSSit library
   rss_it_library:
@@ -24,17 +24,17 @@ dependencies:
   path: ^1.9.1
 
   # UI related
-  new_loading_indicator: ^1.0.2
+  new_loading_indicator: ^1.1.0
   webview_flutter: ^4.13.0
 
   # Sharing, URL launcher
-  share_plus: ^11.1.0
+  share_plus: ^12.0.1
   url_launcher: ^6.3.2
 
   # Utilities
   collection: ^1.19.1
-  dart_scope_functions: ^1.0.3
-  simplest_logger: ^1.0.3
+  dart_scope_functions: ^1.0.4
+  simplest_logger: ^1.0.5
   
 
 dev_dependencies:
