@@ -11,10 +11,10 @@ final class SQLiteDBProvider implements DBProvider {
 
   @override
   Future<bool> feedExistsByURL({required String url}) async {
-    const query = 'select count(*) from feeds where url = ?';
+    const query = 'select count(*) as count from feeds where url = ?';
     final result = await _database.rawQuery(query, [url]);
-    final count = (result.first['count'] as int?) ?? 0;
-    return count > 0;
+    final count = result.first['count'] as int?;
+    return (count ?? 0) > 0;
   }
 
   @override

@@ -43,6 +43,13 @@ dev_dependencies:
 
   # Launcher icons generator
   flutter_launcher_icons: ^0.14.4
+
+  # Testing
+  test: ^1.25.0
+  mocktail: ^1.0.4
+  sqflite_common_ffi: ^2.3.2
+  flutter_test:
+    sdk: flutter
   
 flutter:
   uses-material-design: true
