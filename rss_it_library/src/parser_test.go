@@ -1,11 +1,12 @@
 package main
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/mmcdole/gofeed"
-	"github.com/sunderee/rss-it/proto"
+	pb "github.com/sunderee/rss-it/proto"
 )
 
 func TestCleanString(t *testing.T) {
@@ -130,71 +131,71 @@ func TestCleanWhitespace(t *testing.T) {
 }
 
 func TestRSSParser_ParseFeeds_EmptyRequest(t *testing.T) {
-	parser := RSSParser{parser: gofeed.NewParser()}
-	request := &proto.ParseFeedsRequest{
+	parser := NewRSSParser(gofeed.NewParser, defaultParserConcurrency)
+	request := &pb.ParseFeedsRequest{
 		Urls: []string{},
 	}
 
-	response := parser.ParseFeeds(request)
+	response := parser.ParseFeeds(context.Background(), request)
 
-	if response.Status != proto.ParseFeedsStatus_ERROR {
+	if response.Status != pb.ParseFeedsStatus_ERROR {
 		t.Errorf("Expected ERROR status for empty request, got %v", response.Status)
 	}
-	if len(response.Feeds) != 0 {
-		t.Errorf("Expected no feeds, got %d", len(response.Feeds))
+	if len(response.Errors) == 0 {
+		t.Fatal("Expected validation error for empty request")
 	}
-	if len(response.Errors) != 0 {
-		t.Errorf("Expected no errors, got %d", len(response.Errors))
+	if response.Errors[0].Kind != pb.ErrorKind_ERROR_KIND_VALIDATION {
+		t.Errorf("Expected validation error kind, got %v", response.Errors[0].Kind)
 	}
 }
 
 func TestRSSParser_ParseFeeds_StatusSuccess(t *testing.T) {
 	// Note: This test requires network access or a mock parser
 	// For now, we'll test the status logic with a mock scenario
-	parser := RSSParser{parser: gofeed.NewParser()}
+	parser := NewRSSParser(gofeed.NewParser, defaultParserConcurrency)
 
 	// Test with a known valid RSS feed URL
 	// Using a well-known public RSS feed for testing
 	testURL := "https://www.w3.org/2005/Atom"
-	request := &proto.ParseFeedsRequest{
+	request := &pb.ParseFeedsRequest{
 		Urls: []string{testURL},
 	}
 
-	response := parser.ParseFeeds(request)
+	response := parser.ParseFeeds(context.Background(), request)
 
 	// The status should be SUCCESS if the feed is valid, ERROR if not
 	// We're testing that the status logic works correctly
-	if response.Status != proto.ParseFeedsStatus_SUCCESS && response.Status != proto.ParseFeedsStatus_ERROR {
+	if response.Status != pb.ParseFeedsStatus_SUCCESS && response.Status != pb.ParseFeedsStatus_ERROR {
 		t.Errorf("Expected SUCCESS or ERROR status, got %v", response.Status)
 	}
 }
 
 func TestRSSParser_ParseFeeds_StatusPartial(t *testing.T) {
-	parser := RSSParser{parser: gofeed.NewParser()}
+	parser := NewRSSParser(gofeed.NewParser, defaultParserConcurrency)
 
 	// Test with mix of valid and invalid URLs
-	request := &proto.ParseFeedsRequest{
+	request := &pb.ParseFeedsRequest{
 		Urls: []string{
 			"https://www.w3.org/2005/Atom", // Valid
 			"https://invalid-url-that-does-not-exist-12345.com/rss.xml", // Invalid
 		},
 	}
 
-	response := parser.ParseFeeds(request)
+	response := parser.ParseFeeds(context.Background(), request)
 
 	// Should get PARTIAL status if some succeed and some fail
 	if len(response.Feeds) > 0 && len(response.Errors) > 0 {
-		if response.Status != proto.ParseFeedsStatus_PARTIAL {
+		if response.Status != pb.ParseFeedsStatus_PARTIAL {
 			t.Errorf("Expected PARTIAL status for mixed results, got %v", response.Status)
 		}
 	}
 }
 
 func TestRSSParser_ParseFeeds_ConcurrentParsing(t *testing.T) {
-	parser := RSSParser{parser: gofeed.NewParser()}
+	parser := NewRSSParser(gofeed.NewParser, defaultParserConcurrency)
 
 	// Test concurrent parsing with multiple URLs
-	request := &proto.ParseFeedsRequest{
+	request := &pb.ParseFeedsRequest{
 		Urls: []string{
 			"https://www.w3.org/2005/Atom",
 			"https://www.w3.org/2005/Atom",
@@ -203,7 +204,7 @@ func TestRSSParser_ParseFeeds_ConcurrentParsing(t *testing.T) {
 	}
 
 	start := time.Now()
-	response := parser.ParseFeeds(request)
+	response := parser.ParseFeeds(context.Background(), request)
 	duration := time.Since(start)
 
 	// Concurrent parsing should be faster than sequential
@@ -214,20 +215,20 @@ func TestRSSParser_ParseFeeds_ConcurrentParsing(t *testing.T) {
 
 	// Verify semaphore limit (max 10 concurrent)
 	// We can't directly test this, but we verify it doesn't crash
-	if response.Status == proto.ParseFeedsStatus_ERROR && len(response.Errors) > 0 {
+	if response.Status == pb.ParseFeedsStatus_ERROR && len(response.Errors) > 0 {
 		t.Logf("Got errors (expected for network test): %v", response.Errors)
 	}
 }
 
 func TestRSSParser_ParseFeeds_FeedItemConversion(t *testing.T) {
-	parser := RSSParser{parser: gofeed.NewParser()}
+	parser := NewRSSParser(gofeed.NewParser, defaultParserConcurrency)
 
 	// Test with a feed that should have items
-	request := &proto.ParseFeedsRequest{
+	request := &pb.ParseFeedsRequest{
 		Urls: []string{"https://www.w3.org/2005/Atom"},
 	}
 
-	response := parser.ParseFeeds(request)
+	response := parser.ParseFeeds(context.Background(), request)
 
 	if len(response.Feeds) > 0 {
 		feed := response.Feeds[0]
@@ -249,16 +250,16 @@ func TestRSSParser_ParseFeeds_FeedItemConversion(t *testing.T) {
 }
 
 func TestRSSParser_ParseFeeds_ErrorHandling(t *testing.T) {
-	parser := RSSParser{parser: gofeed.NewParser()}
+	parser := NewRSSParser(gofeed.NewParser, defaultParserConcurrency)
 
 	// Test with invalid URL
-	request := &proto.ParseFeedsRequest{
+	request := &pb.ParseFeedsRequest{
 		Urls: []string{"not-a-valid-url"},
 	}
 
-	response := parser.ParseFeeds(request)
+	response := parser.ParseFeeds(context.Background(), request)
 
-	if response.Status != proto.ParseFeedsStatus_ERROR {
+	if response.Status != pb.ParseFeedsStatus_ERROR {
 		t.Errorf("Expected ERROR status for invalid URL, got %v", response.Status)
 	}
 	if len(response.Errors) == 0 {
@@ -270,18 +271,18 @@ func TestRSSParser_ParseFeeds_ErrorHandling(t *testing.T) {
 }
 
 func TestRSSParser_ParseFeeds_AllInvalid(t *testing.T) {
-	parser := RSSParser{parser: gofeed.NewParser()}
+	parser := NewRSSParser(gofeed.NewParser, defaultParserConcurrency)
 
-	request := &proto.ParseFeedsRequest{
+	request := &pb.ParseFeedsRequest{
 		Urls: []string{
 			"https://invalid-url-1.com/rss.xml",
 			"https://invalid-url-2.com/rss.xml",
 		},
 	}
 
-	response := parser.ParseFeeds(request)
+	response := parser.ParseFeeds(context.Background(), request)
 
-	if response.Status != proto.ParseFeedsStatus_ERROR {
+	if response.Status != pb.ParseFeedsStatus_ERROR {
 		t.Errorf("Expected ERROR status for all invalid URLs, got %v", response.Status)
 	}
 	if len(response.Feeds) != 0 {

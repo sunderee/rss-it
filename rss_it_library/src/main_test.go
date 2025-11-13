@@ -109,7 +109,7 @@ func TestProtobufSerialization_ParseResponse(t *testing.T) {
 				Title: "Test Feed",
 			},
 		},
-		Errors: []string{},
+		Errors: []*libproto.ErrorDetail{},
 	}
 
 	data, err := proto.Marshal(response)

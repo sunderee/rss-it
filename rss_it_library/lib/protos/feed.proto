@@ -2,12 +2,28 @@ syntax = "proto3";
 
 package proto;
 
+enum ErrorKind {
+  ERROR_KIND_UNKNOWN = 0;
+  ERROR_KIND_SERIALIZATION = 1;
+  ERROR_KIND_NETWORK = 2;
+  ERROR_KIND_PARSING = 3;
+  ERROR_KIND_VALIDATION = 4;
+  ERROR_KIND_INTERNAL = 5;
+}
+
+message ErrorDetail {
+  ErrorKind kind = 1;
+  string message = 2;
+  string url = 3;
+}
+
 message ValidateFeedRequest {
   string url = 1;
 }
 
 message ValidateFeedResponse {
   bool valid = 1;
+  ErrorDetail error = 2;
 }
 
 message ParseFeedsRequest {
@@ -17,7 +33,8 @@ message ParseFeedsRequest {
 message ParseFeedsResponse {
   ParseFeedsStatus status = 1;
   repeated Feed feeds = 2;
-  repeated string errors = 3;
+  repeated ErrorDetail errors = 3;
+  ErrorDetail fatal_error = 4;
 }
 
 enum ParseFeedsStatus {

@@ -39,3 +39,7 @@ prebuild/
 **/*.pbenum.dart
 **/*.pbjson.dart
 **/*.pbserver.dart
+
+# Allow committed protobuf artefacts that are required for the plugin API.
+!src/proto/feed.pb.go
+!lib/protos/feed.pb.dart
