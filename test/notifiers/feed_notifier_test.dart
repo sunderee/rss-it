@@ -1,9 +1,9 @@
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:rss_it/domain/data/enums.dart';
 import 'package:rss_it/domain/repositories/feed_repository.dart';
 import 'package:rss_it/notifiers/feed_notifier.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
-import 'package:test/test.dart';
 
 import '../helpers/mock_factories.dart';
 

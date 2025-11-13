@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
+import 'package:flutter_test/flutter_test.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
 import 'package:rss_it_library/rss_it_library.dart';
-import 'package:test/test.dart';
 
 void main() {
   group('Protobuf Serialization', () {
@@ -54,15 +54,12 @@ void main() {
 
       feed.items.add(feedItem);
 
-    final response = ParseFeedsResponse()
-      ..status = ParseFeedsStatus.SUCCESS
-      ..feeds.add(feed)
-      ..errors.add(
-        ErrorDetail(
-          message: 'warning',
-          kind: ErrorKind.ERROR_KIND_PARSING,
-        ),
-      );
+      final response = ParseFeedsResponse()
+        ..status = ParseFeedsStatus.SUCCESS
+        ..feeds.add(feed)
+        ..errors.add(
+          ErrorDetail(message: 'warning', kind: ErrorKind.ERROR_KIND_PARSING),
+        );
 
       final buffer = response.writeToBuffer();
       expect(buffer.isNotEmpty, isTrue);
@@ -73,9 +70,9 @@ void main() {
       expect(deserialized.feeds[0].url, equals('https://example.com/rss.xml'));
       expect(deserialized.feeds[0].title, equals('Test Feed'));
       expect(deserialized.feeds[0].items.length, equals(1));
-    expect(deserialized.feeds[0].items[0].title, equals('Test Article'));
-    expect(deserialized.errors.length, equals(1));
-    expect(deserialized.errors.first.message, equals('warning'));
+      expect(deserialized.feeds[0].items[0].title, equals('Test Article'));
+      expect(deserialized.errors.length, equals(1));
+      expect(deserialized.errors.first.message, equals('warning'));
     });
   });
 
