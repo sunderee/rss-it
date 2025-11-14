@@ -33,29 +33,45 @@ final class DefaultFeedRepository
       return FeedValidationStatus.feedExists;
     }
 
-    final validationStatus = await _validateFeedURL(url);
-    logger.info('...feed $url validation status: $validationStatus');
-    return validationStatus
-        ? FeedValidationStatus.valid
-        : FeedValidationStatus.feedInvalid;
+    try {
+      final validationStatus = await _validateFeedURL(url);
+      logger.info('...feed $url validation status: $validationStatus');
+      return validationStatus
+          ? FeedValidationStatus.valid
+          : FeedValidationStatus.feedInvalid;
+    } on rss_it_library.RssItLibraryException catch (e) {
+      logger.error('...feed $url validation failed: $e');
+      return FeedValidationStatus.feedInvalid;
+    } catch (e) {
+      logger.error('...feed $url validation error: $e');
+      return FeedValidationStatus.feedInvalid;
+    }
   }
 
   @override
   Future<Iterable<Feed>> getFeedsFromRemote(List<String> urls) async {
     logger.info('Fetching feeds from remote ($urls)...');
-    final result = await _parseFeedURLs(urls);
+    try {
+      final result = await _parseFeedURLs(urls);
 
-    (switch (result.status) {
-      ParseFeedsStatus.SUCCESS => logger.info('...status: successful'),
-      ParseFeedsStatus.ERROR => logger.error('...status: error'),
-      ParseFeedsStatus.PARTIAL => logger.warning('...status: partial'),
-      _ => logger.info('...status: unknown'),
-    });
-    result.errors
-        .takeIf((it) => it.isNotEmpty)
-        ?.also((it) => logger.error('...errors: $it'));
+      (switch (result.status) {
+        ParseFeedsStatus.SUCCESS => logger.info('...status: successful'),
+        ParseFeedsStatus.ERROR => logger.error('...status: error'),
+        ParseFeedsStatus.PARTIAL => logger.warning('...status: partial'),
+        _ => logger.info('...status: unknown'),
+      });
+      result.errors
+          .takeIf((it) => it.isNotEmpty)
+          ?.also((it) => logger.error('...errors: $it'));
 
-    return result.feeds;
+      return result.feeds;
+    } on rss_it_library.RssItLibraryException catch (e) {
+      logger.error('...fatal error fetching feeds: $e');
+      return [];
+    } catch (e) {
+      logger.error('...error fetching feeds: $e');
+      return [];
+    }
   }
 
   @override
