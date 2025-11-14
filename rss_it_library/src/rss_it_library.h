@@ -7,3 +7,4 @@
 
 FFI_PLUGIN_EXPORT char* validate(const char* data, int length);
 FFI_PLUGIN_EXPORT char* parse(const char* data, int length);
+FFI_PLUGIN_EXPORT void free_result(char* ptr);
