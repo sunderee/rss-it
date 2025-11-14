@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 
+import 'package:flutter_test/flutter_test.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
-import 'package:test/test.dart';
+import 'package:rss_it_library/rss_it_library.dart';
 
 void main() {
   group('Protobuf Serialization', () {
@@ -55,7 +56,10 @@ void main() {
 
       final response = ParseFeedsResponse()
         ..status = ParseFeedsStatus.SUCCESS
-        ..feeds.add(feed);
+        ..feeds.add(feed)
+        ..errors.add(
+          ErrorDetail(message: 'warning', kind: ErrorKind.ERROR_KIND_PARSING),
+        );
 
       final buffer = response.writeToBuffer();
       expect(buffer.isNotEmpty, isTrue);
@@ -67,6 +71,8 @@ void main() {
       expect(deserialized.feeds[0].title, equals('Test Feed'));
       expect(deserialized.feeds[0].items.length, equals(1));
       expect(deserialized.feeds[0].items[0].title, equals('Test Article'));
+      expect(deserialized.errors.length, equals(1));
+      expect(deserialized.errors.first.message, equals('warning'));
     });
   });
 
@@ -233,15 +239,18 @@ void main() {
     test('ParseFeedsResponse with errors', () {
       final response = ParseFeedsResponse()
         ..status = ParseFeedsStatus.ERROR
-        ..errors.addAll(['Error 1', 'Error 2']);
+        ..errors.addAll([
+          ErrorDetail(message: 'Error 1', kind: ErrorKind.ERROR_KIND_NETWORK),
+          ErrorDetail(message: 'Error 2', kind: ErrorKind.ERROR_KIND_PARSING),
+        ]);
 
       final buffer = response.writeToBuffer();
       final deserialized = ParseFeedsResponse.fromBuffer(buffer);
 
       expect(deserialized.status, equals(ParseFeedsStatus.ERROR));
       expect(deserialized.errors.length, equals(2));
-      expect(deserialized.errors[0], equals('Error 1'));
-      expect(deserialized.errors[1], equals('Error 2'));
+      expect(deserialized.errors[0].message, equals('Error 1'));
+      expect(deserialized.errors[1].kind, equals(ErrorKind.ERROR_KIND_PARSING));
     });
 
     test('ParseFeedsResponse PARTIAL status', () {
@@ -252,11 +261,40 @@ void main() {
       final response = ParseFeedsResponse()
         ..status = ParseFeedsStatus.PARTIAL
         ..feeds.add(feed1)
-        ..errors.add('Failed to parse rss2.xml');
+        ..errors.add(
+          ErrorDetail(
+            message: 'Failed to parse rss2.xml',
+            kind: ErrorKind.ERROR_KIND_PARSING,
+            url: 'https://example.com/rss2.xml',
+          ),
+        );
 
       expect(response.status, equals(ParseFeedsStatus.PARTIAL));
       expect(response.feeds.length, equals(1));
       expect(response.errors.length, equals(1));
+      expect(response.errors.first.url, equals('https://example.com/rss2.xml'));
+    });
+  });
+
+  group('RssItLibraryException', () {
+    test('toString includes context information', () {
+      final detail = ErrorDetail(
+        message: 'boom',
+        kind: ErrorKind.ERROR_KIND_VALIDATION,
+        url: 'https://example.invalid',
+      );
+      final error = RssItLibraryException('validate', detail);
+
+      final rendered = error.toString();
+      expect(rendered, contains('validate'));
+      expect(rendered, contains('boom'));
+      expect(rendered, contains('example.invalid'));
+    });
+
+    test('internal constructor defaults to internal error kind', () {
+      final error = RssItLibraryException.internal('parse', 'fatal');
+      expect(error.detail.kind, equals(ErrorKind.ERROR_KIND_INTERNAL));
+      expect(error.detail.message, equals('fatal'));
     });
   });
 }

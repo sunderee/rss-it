@@ -1,6 +1,6 @@
+import 'package:flutter_test/flutter_test.dart';
 import 'package:rss_it/domain/data/feed_item_entity.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
-import 'package:test/test.dart';
 
 void main() {
   group('FeedItemEntity', () {

@@ -1,6 +1,6 @@
+import 'package:flutter_test/flutter_test.dart';
 import 'package:rss_it/domain/data/feed_entity.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
-import 'package:test/test.dart';
 
 void main() {
   group('FeedEntity', () {
@@ -21,7 +21,10 @@ void main() {
       expect(entity.title, equals('Test Feed'));
       expect(entity.description, equals('Test Description'));
       expect(entity.thumbnailURL, equals('https://example.com/thumbnail.png'));
-      expect(entity.addedAt, equals(DateTime.parse('2024-01-01T12:00:00.000Z')));
+      expect(
+        entity.addedAt,
+        equals(DateTime.parse('2024-01-01T12:00:00.000Z')),
+      );
     });
 
     test('fromJson creates FeedEntity with nullable fields as null', () {
@@ -57,7 +60,10 @@ void main() {
       expect(json['url'], equals('https://example.com/rss.xml'));
       expect(json['title'], equals('Test Feed'));
       expect(json['description'], equals('Test Description'));
-      expect(json['thumbnail_url'], equals('https://example.com/thumbnail.png'));
+      expect(
+        json['thumbnail_url'],
+        equals('https://example.com/thumbnail.png'),
+      );
       expect(json['added_at'], equals('2024-01-01T12:00:00.000Z'));
     });
 
@@ -131,7 +137,9 @@ void main() {
       final afterCreation = DateTime.now();
 
       expect(
-        entity.addedAt.isAfter(beforeCreation.subtract(const Duration(seconds: 1))),
+        entity.addedAt.isAfter(
+          beforeCreation.subtract(const Duration(seconds: 1)),
+        ),
         isTrue,
       );
       expect(
@@ -157,9 +165,11 @@ void main() {
       expect(roundTripJson['url'], equals(originalJson['url']));
       expect(roundTripJson['title'], equals(originalJson['title']));
       expect(roundTripJson['description'], equals(originalJson['description']));
-      expect(roundTripJson['thumbnail_url'], equals(originalJson['thumbnail_url']));
+      expect(
+        roundTripJson['thumbnail_url'],
+        equals(originalJson['thumbnail_url']),
+      );
       expect(roundTripJson['added_at'], equals(originalJson['added_at']));
     });
   });
 }
-

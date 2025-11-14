@@ -4,8 +4,8 @@ publish_to: 'none'
 version: 1.0.0+5
 
 environment:
-  sdk: ">=3.9.2"
-  flutter: ">=3.35.7"
+  sdk: "3.10.0-290.4.beta"
+  flutter: ">=3.38.0"
 
 dependencies:
   flutter:
@@ -45,9 +45,8 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
 
   # Testing
-  test: ^1.25.0
   mocktail: ^1.0.4
-  sqflite_common_ffi: ^2.3.2
+  sqflite_common_ffi: ^2.3.6
   flutter_test:
     sdk: flutter
   

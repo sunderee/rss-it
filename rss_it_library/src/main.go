@@ -8,110 +8,138 @@ package main
 */
 import "C"
 import (
+	"context"
 	"encoding/binary"
+	"fmt"
+	"time"
 	"unsafe"
 
 	"github.com/mmcdole/gofeed"
-	libproto "github.com/sunderee/rss-it/proto"
-	proto "google.golang.org/protobuf/proto"
+	pb "github.com/sunderee/rss-it/proto"
+	goproto "google.golang.org/protobuf/proto"
 )
 
-var parser *gofeed.Parser = gofeed.NewParser()
+const (
+	defaultParseTimeout = 30 * time.Second
+)
+
+var (
+	parserFactory   = gofeed.NewParser
+	sharedValidator = NewRSSValidator(parserFactory, defaultValidationTimeout)
+	sharedParser    = NewRSSParser(parserFactory, defaultParserConcurrency)
+)
 
 //export validate
 func validate(data *C.char, length C.int) *C.char {
 	bytes := C.GoBytes(unsafe.Pointer(data), length)
 
-	validateRequest := &libproto.ValidateFeedRequest{}
-	err := proto.Unmarshal(bytes, validateRequest)
-	if err != nil {
-		errorMsg := err.Error()
-		errorBytes := []byte(errorMsg)
-
-		// Prepend length (4 bytes) + error message
-		result := make([]byte, 4+len(errorBytes))
-		binary.LittleEndian.PutUint32(result[0:4], uint32(len(errorBytes)))
-		copy(result[4:], errorBytes)
-
-		resultPtr := C.malloc(C.size_t(len(result)))
-		C.memcpy(resultPtr, unsafe.Pointer(&result[0]), C.size_t(len(result)))
-		return (*C.char)(resultPtr)
+	request := &pb.ValidateFeedRequest{}
+	if err := goproto.Unmarshal(bytes, request); err != nil {
+		response := &pb.ValidateFeedResponse{
+			Valid: false,
+			Error: newErrorDetail(pb.ErrorKind_ERROR_KIND_SERIALIZATION, fmt.Sprintf("decode validate request: %v", err), ""),
+		}
+		return marshalToC(response, func(mErr error) goproto.Message {
+			return &pb.ValidateFeedResponse{
+				Valid: false,
+				Error: newErrorDetail(pb.ErrorKind_ERROR_KIND_INTERNAL, fmt.Sprintf("encode validate response: %v", mErr), ""),
+			}
+		})
 	}
 
-	validator := RSSValidator{parser: parser}
-	validationResult := validator.ValidateFeedURL(validateRequest)
+	ctx := context.Background()
+	response := sharedValidator.ValidateFeedURL(ctx, request)
 
-	deserialized, err := proto.Marshal(&validationResult)
-	if err != nil {
-		errorMsg := err.Error()
-		errorBytes := []byte(errorMsg)
-
-		// Prepend length (4 bytes) + error message
-		result := make([]byte, 4+len(errorBytes))
-		binary.LittleEndian.PutUint32(result[0:4], uint32(len(errorBytes)))
-		copy(result[4:], errorBytes)
-
-		resultPtr := C.malloc(C.size_t(len(result)))
-		C.memcpy(resultPtr, unsafe.Pointer(&result[0]), C.size_t(len(result)))
-		return (*C.char)(resultPtr)
-	}
-
-	// Prepend length (4 bytes) + protobuf data
-	result := make([]byte, 4+len(deserialized))
-	binary.LittleEndian.PutUint32(result[0:4], uint32(len(deserialized)))
-	copy(result[4:], deserialized)
-
-	resultPtr := C.malloc(C.size_t(len(result)))
-	C.memcpy(resultPtr, unsafe.Pointer(&result[0]), C.size_t(len(result)))
-	return (*C.char)(resultPtr)
+	return marshalToC(response, func(mErr error) goproto.Message {
+		return &pb.ValidateFeedResponse{
+			Valid: false,
+			Error: newErrorDetail(pb.ErrorKind_ERROR_KIND_INTERNAL, fmt.Sprintf("encode validate response: %v", mErr), request.GetUrl()),
+		}
+	})
 }
 
 //export parse
 func parse(data *C.char, length C.int) *C.char {
 	bytes := C.GoBytes(unsafe.Pointer(data), length)
 
-	parseRequest := &libproto.ParseFeedsRequest{}
-	err := proto.Unmarshal(bytes, parseRequest)
-	if err != nil {
-		errorMsg := err.Error()
-		errorBytes := []byte(errorMsg)
-
-		// Prepend length (4 bytes) + error message
-		result := make([]byte, 4+len(errorBytes))
-		binary.LittleEndian.PutUint32(result[0:4], uint32(len(errorBytes)))
-		copy(result[4:], errorBytes)
-
-		resultPtr := C.malloc(C.size_t(len(result)))
-		C.memcpy(resultPtr, unsafe.Pointer(&result[0]), C.size_t(len(result)))
-		return (*C.char)(resultPtr)
+	request := &pb.ParseFeedsRequest{}
+	if err := goproto.Unmarshal(bytes, request); err != nil {
+		response := &pb.ParseFeedsResponse{
+			Status:     pb.ParseFeedsStatus_ERROR,
+			FatalError: newErrorDetail(pb.ErrorKind_ERROR_KIND_SERIALIZATION, fmt.Sprintf("decode parse request: %v", err), ""),
+		}
+		return marshalToC(response, func(mErr error) goproto.Message {
+			return &pb.ParseFeedsResponse{
+				Status:     pb.ParseFeedsStatus_ERROR,
+				FatalError: newErrorDetail(pb.ErrorKind_ERROR_KIND_INTERNAL, fmt.Sprintf("encode parse response: %v", mErr), ""),
+			}
+		})
 	}
 
-	parser := RSSParser{parser: parser}
-	response := parser.ParseFeeds(parseRequest)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultParseTimeout)
+	defer cancel()
 
-	deserialized, err := proto.Marshal(&response)
-	if err != nil {
-		errorMsg := err.Error()
-		errorBytes := []byte(errorMsg)
+	response := sharedParser.ParseFeeds(ctx, request)
 
-		// Prepend length (4 bytes) + error message
-		result := make([]byte, 4+len(errorBytes))
-		binary.LittleEndian.PutUint32(result[0:4], uint32(len(errorBytes)))
-		copy(result[4:], errorBytes)
+	return marshalToC(response, func(mErr error) goproto.Message {
+		return &pb.ParseFeedsResponse{
+			Status:     pb.ParseFeedsStatus_ERROR,
+			FatalError: newErrorDetail(pb.ErrorKind_ERROR_KIND_INTERNAL, fmt.Sprintf("encode parse response: %v", mErr), ""),
+		}
+	})
+}
 
-		resultPtr := C.malloc(C.size_t(len(result)))
-		C.memcpy(resultPtr, unsafe.Pointer(&result[0]), C.size_t(len(result)))
-		return (*C.char)(resultPtr)
+//export free_result
+func free_result(ptr *C.char) {
+	if ptr == nil {
+		return
 	}
-
-	// Prepend length (4 bytes) + protobuf data
-	result := make([]byte, 4+len(deserialized))
-	binary.LittleEndian.PutUint32(result[0:4], uint32(len(deserialized)))
-	copy(result[4:], deserialized)
-
-	resultPtr := C.malloc(C.size_t(len(result)))
-	C.memcpy(resultPtr, unsafe.Pointer(&result[0]), C.size_t(len(result)))
-	return (*C.char)(resultPtr)
+	C.free(unsafe.Pointer(ptr))
 }
 
 func main() {}
+
+// marshalToC serialises a protobuf message and returns a length-prefixed buffer allocated for C consumers.
+func marshalToC(message goproto.Message, fallback func(error) goproto.Message) *C.char {
+	payload, err := goproto.Marshal(message)
+	if err != nil {
+		if fallback != nil {
+			if fb := fallback(err); fb != nil {
+				if fallbackPayload, fallbackErr := goproto.Marshal(fb); fallbackErr == nil {
+					payload = fallbackPayload
+				} else {
+					payload = []byte{}
+				}
+			} else {
+				payload = []byte{}
+			}
+		} else {
+			payload = []byte{}
+		}
+	}
+
+	return copyToC(lengthPrefix(payload))
+}
+
+// lengthPrefix prepends a 32-bit little-endian length header to payload.
+func lengthPrefix(payload []byte) []byte {
+	result := make([]byte, 4+len(payload))
+	binary.LittleEndian.PutUint32(result[0:4], uint32(len(payload)))
+	copy(result[4:], payload)
+	return result
+}
+
+// copyToC allocates C memory and copies the provided Go slice.
+func copyToC(data []byte) *C.char {
+	if len(data) == 0 {
+		return nil
+	}
+
+	ptr := C.malloc(C.size_t(len(data)))
+	if ptr == nil {
+		return nil
+	}
+
+	C.memcpy(ptr, unsafe.Pointer(&data[0]), C.size_t(len(data)))
+	return (*C.char)(ptr)
+}

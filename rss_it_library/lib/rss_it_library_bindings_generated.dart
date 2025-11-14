@@ -51,4 +51,17 @@ class RssItLibraryBindings {
       >('parse');
   late final _parse = _parsePtr
       .asFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>, int)>();
+
+  void freeResult(ffi.Pointer<ffi.Char> data) {
+    return _freeResult(data);
+  }
+
+  late final _freeResultPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Char>)
+        >
+      >('free_result');
+  late final _freeResult =
+      _freeResultPtr.asFunction<void Function(ffi.Pointer<ffi.Char>)>();
 }

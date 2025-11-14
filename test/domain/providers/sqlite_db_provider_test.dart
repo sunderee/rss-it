@@ -1,8 +1,8 @@
+import 'package:flutter_test/flutter_test.dart';
 import 'package:rss_it/domain/data/feed_entity.dart';
 import 'package:rss_it/domain/providers/db_provider.dart';
 import 'package:rss_it/domain/providers/sqlite_db_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:test/test.dart';
 
 import '../../helpers/mock_factories.dart';
 import '../../helpers/test_database.dart';

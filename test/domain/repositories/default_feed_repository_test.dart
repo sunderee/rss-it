@@ -1,3 +1,4 @@
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:rss_it/domain/data/enums.dart';
 import 'package:rss_it/domain/data/feed_entity.dart';
@@ -5,7 +6,6 @@ import 'package:rss_it/domain/data/feed_item_entity.dart';
 import 'package:rss_it/domain/providers/db_provider.dart';
 import 'package:rss_it/domain/repositories/default_feed_repository.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
-import 'package:test/test.dart';
 
 import '../../helpers/mock_factories.dart';
 
