@@ -18,9 +18,11 @@ void main() {
     late MockFeedRepository mockRepository;
     late FeedNotifier notifier;
 
-    setUp(() {
+      setUp(() {
       mockRepository = MockFeedRepository();
       notifier = FeedNotifier(feedRepositoryInstance: mockRepository);
+        when(() => mockRepository.getFeedsFromDB()).thenAnswer((_) async => []);
+        when(() => mockRepository.getFoldersFromDB()).thenAnswer((_) async => []);
     });
 
     group('Initial State', () {
@@ -236,9 +238,12 @@ void main() {
         when(
           () => mockRepository.getFeedsFromRemote(any()),
         ).thenAnswer((_) async => [MockFactories.createFeedProto()]);
-        when(
-          () => mockRepository.saveFeedToDB(any()),
-        ).thenAnswer((_) async => {});
+          when(
+            () => mockRepository.saveFeedToDB(
+              any(),
+              folderID: any(named: 'folderID'),
+            ),
+          ).thenAnswer((_) async => {});
         when(() => mockRepository.getFeedsFromDB()).thenAnswer((_) async => []);
         when(
           () => mockRepository.updatedFeedItemsIfNecessary(any()),
@@ -263,9 +268,12 @@ void main() {
         when(
           () => mockRepository.getFeedsFromRemote(any()),
         ).thenAnswer((_) async => [remoteFeed]);
-        when(
-          () => mockRepository.saveFeedToDB(any()),
-        ).thenAnswer((_) async => {});
+          when(
+            () => mockRepository.saveFeedToDB(
+              any(),
+              folderID: any(named: 'folderID'),
+            ),
+          ).thenAnswer((_) async => {});
         when(() => mockRepository.getFeedsFromDB()).thenAnswer((_) async => []);
         when(
           () => mockRepository.updatedFeedItemsIfNecessary(any()),
@@ -275,7 +283,12 @@ void main() {
 
         verify(() => mockRepository.validateFeed(url)).called(1);
         verify(() => mockRepository.getFeedsFromRemote(any())).called(1);
-        verify(() => mockRepository.saveFeedToDB(any())).called(1);
+          verify(
+            () => mockRepository.saveFeedToDB(
+              any(),
+              folderID: any(named: 'folderID'),
+            ),
+          ).called(1);
       });
 
       test('does not save feed when validation fails', () async {
@@ -289,7 +302,12 @@ void main() {
         await notifier.addFeed(url);
 
         verify(() => mockRepository.validateFeed(url)).called(1);
-        verifyNever(() => mockRepository.saveFeedToDB(any()));
+          verifyNever(
+            () => mockRepository.saveFeedToDB(
+              any(),
+              folderID: any(named: 'folderID'),
+            ),
+          );
       });
 
       test('does not save feed when feed already exists', () async {
@@ -309,7 +327,12 @@ void main() {
         await notifier.addFeed(url);
 
         verify(() => mockRepository.validateFeed(url)).called(1);
-        verifyNever(() => mockRepository.saveFeedToDB(any()));
+          verifyNever(
+            () => mockRepository.saveFeedToDB(
+              any(),
+              folderID: any(named: 'folderID'),
+            ),
+          );
       });
 
       test('refreshes feeds after adding', () async {
@@ -323,9 +346,12 @@ void main() {
         when(
           () => mockRepository.getFeedsFromRemote(any()),
         ).thenAnswer((_) async => [remoteFeed]);
-        when(
-          () => mockRepository.saveFeedToDB(any()),
-        ).thenAnswer((_) async => {});
+          when(
+            () => mockRepository.saveFeedToDB(
+              any(),
+              folderID: any(named: 'folderID'),
+            ),
+          ).thenAnswer((_) async => {});
         // getFeedsFromDB is called twice: once at start of getFeeds(), once at end
         when(
           () => mockRepository.getFeedsFromDB(),
@@ -409,6 +435,54 @@ void main() {
         verify(() => mockRepository.getFeedsFromDB()).called(greaterThan(0));
       });
     });
+
+      group('folder operations', () {
+        test('createFolder delegates to repository', () async {
+          when(() => mockRepository.createFolder(any())).thenAnswer(
+            (_) async => 1,
+          );
+
+          await notifier.createFolder('Work');
+
+          verify(() => mockRepository.createFolder('Work')).called(1);
+          verify(() => mockRepository.getFoldersFromDB()).called(greaterThan(0));
+        });
+
+        test('renameFolder delegates to repository', () async {
+          when(
+            () => mockRepository.renameFolder(any(), any()),
+          ).thenAnswer((_) async => {});
+
+          await notifier.renameFolder(folderID: 4, newName: 'Reading');
+
+          verify(() => mockRepository.renameFolder(4, 'Reading')).called(1);
+        });
+
+        test('deleteFolder delegates to repository', () async {
+          when(
+            () => mockRepository.deleteFolder(any()),
+          ).thenAnswer((_) async => {});
+
+          await notifier.deleteFolder(3);
+
+          verify(() => mockRepository.deleteFolder(3)).called(1);
+        });
+
+        test('moveFeedToFolder delegates to repository', () async {
+          when(
+            () => mockRepository.moveFeedToFolder(
+              feedID: any(named: 'feedID'),
+              folderID: any(named: 'folderID'),
+            ),
+          ).thenAnswer((_) async => {});
+
+          await notifier.moveFeedToFolder(feedID: 10, folderID: 2);
+
+          verify(
+            () => mockRepository.moveFeedToFolder(feedID: 10, folderID: 2),
+          ).called(1);
+        });
+      });
 
     group('resetFeedItems', () {
       test('resets all feed item related state', () {
