@@ -3,6 +3,7 @@ import 'package:dart_scope_functions/dart_scope_functions.dart';
 import 'package:rss_it/domain/data/enums.dart';
 import 'package:rss_it/domain/data/feed_entity.dart';
 import 'package:rss_it/domain/data/feed_item_entity.dart';
+import 'package:rss_it/domain/data/folder_entity.dart';
 import 'package:rss_it/domain/providers/db_provider.dart';
 import 'package:rss_it/domain/repositories/feed_repository.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
@@ -84,6 +85,15 @@ final class DefaultFeedRepository
   }
 
   @override
+  Future<Iterable<FolderEntity>> getFoldersFromDB() async {
+    logger.info('Fetching folders from database...');
+    final result = await _dbProvider.getFolders();
+    logger.info('...folders count: ${result.length}');
+
+    return result;
+  }
+
+  @override
   Future<Iterable<FeedItemEntity>> getFeedItemsFromDB(int feedID) async {
     logger.info('Fetching feed items from database (feedID: $feedID)...');
     final result = await _dbProvider.getFeedItems(feedID: feedID);
@@ -125,9 +135,12 @@ final class DefaultFeedRepository
   }
 
   @override
-  Future<void> saveFeedToDB(Feed remoteFeed) async {
+  Future<void> saveFeedToDB(Feed remoteFeed, {int? folderID}) async {
     logger.info('Saving feed to database...');
-    final feedEntity = FeedEntity.fromRemoteFeed(remoteFeed);
+    final feedEntity = FeedEntity.fromRemoteFeed(
+      remoteFeed,
+      folderId: folderID,
+    );
     final feedID = await _dbProvider.createFeedAndReturnID(feed: feedEntity);
     logger.info('...feed ID: $feedID');
 
@@ -144,5 +157,33 @@ final class DefaultFeedRepository
     logger.info('Deleting feed from database (feedID: $feedID)...');
     await _dbProvider.deleteFeed(feedID: feedID);
     logger.info('...feed deleted from database.');
+  }
+
+  @override
+  Future<int> createFolder(String name) async {
+    logger.info('Creating folder with name $name...');
+    final folderID = await _dbProvider.createFolder(
+      folder: FolderEntity(name: name, createdAt: DateTime.now()),
+    );
+    logger.info('...folder created with id $folderID');
+    return folderID;
+  }
+
+  @override
+  Future<void> renameFolder(int folderID, String newName) async {
+    logger.info('Renaming folder $folderID to $newName');
+    await _dbProvider.renameFolder(folderID: folderID, newName: newName);
+  }
+
+  @override
+  Future<void> deleteFolder(int folderID) async {
+    logger.info('Deleting folder $folderID');
+    await _dbProvider.deleteFolder(folderID: folderID);
+  }
+
+  @override
+  Future<void> moveFeedToFolder({required int feedID, int? folderID}) async {
+    logger.info('Moving feed $feedID to folder $folderID');
+    await _dbProvider.moveFeedToFolder(feedID: feedID, folderID: folderID);
   }
 }

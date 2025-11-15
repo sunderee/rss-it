@@ -1,5 +1,6 @@
 import 'package:rss_it/domain/data/feed_entity.dart';
 import 'package:rss_it/domain/data/feed_item_entity.dart';
+import 'package:rss_it/domain/data/folder_entity.dart';
 import 'package:rss_it/domain/providers/db_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -55,6 +56,7 @@ final class SQLiteDBProvider implements DBProvider {
 
   @override
   Future<Iterable<FeedEntity>> getFeeds({
+    int? folderID,
     GetFeedsOrderBy orderBy = GetFeedsOrderBy.title,
     OrderByDirection orderByDirection = OrderByDirection.ascending,
   }) async {
@@ -68,9 +70,13 @@ final class SQLiteDBProvider implements DBProvider {
       OrderByDirection.descending => 'desc',
     };
 
+    final whereClause = folderID != null ? 'where folder_id = ?' : '';
     final query =
-        'select * from feeds order by $orderByColumn $orderByDirectionString';
-    final result = await _database.rawQuery(query);
+        'select * from feeds $whereClause order by $orderByColumn $orderByDirectionString';
+    final result = await _database.rawQuery(
+      query,
+      folderID != null ? [folderID] : null,
+    );
     return result.map((item) => FeedEntity.fromJson(item));
   }
 
@@ -88,5 +94,76 @@ final class SQLiteDBProvider implements DBProvider {
       await txn.delete('feed_items', where: 'feed_id = $feedID');
       await txn.delete('feeds', where: 'id = $feedID');
     });
+  }
+
+  @override
+  Future<Iterable<FolderEntity>> getFolders({
+    OrderByDirection orderByDirection = OrderByDirection.ascending,
+  }) async {
+    final orderByDirectionString = switch (orderByDirection) {
+      OrderByDirection.ascending => 'asc',
+      OrderByDirection.descending => 'desc',
+    };
+
+    final query = 'select * from folders order by name $orderByDirectionString';
+    final result = await _database.rawQuery(query);
+    return result.map(FolderEntity.fromJson);
+  }
+
+  @override
+  Future<int> createFolder({required FolderEntity folder}) async {
+    return _database.insert('folders', folder.toJson());
+  }
+
+  @override
+  Future<void> renameFolder({
+    required int folderID,
+    required String newName,
+  }) {
+    return _database.update(
+      'folders',
+      {'name': newName},
+      where: 'id = ?',
+      whereArgs: [folderID],
+    );
+  }
+
+  @override
+  Future<void> deleteFolder({required int folderID}) async {
+    await _database.transaction((txn) async {
+      final feedRows = await txn.query(
+        'feeds',
+        columns: ['id'],
+        where: 'folder_id = ?',
+        whereArgs: [folderID],
+      );
+      final feedIDs = feedRows.map((row) => row['id'] as int).toList();
+
+      if (feedIDs.isNotEmpty) {
+        final placeholders = List.filled(feedIDs.length, '?').join(', ');
+        await txn.delete(
+          'feed_items',
+          where: 'feed_id in ($placeholders)',
+          whereArgs: feedIDs,
+        );
+        await txn.delete(
+          'feeds',
+          where: 'id in ($placeholders)',
+          whereArgs: feedIDs,
+        );
+      }
+
+      await txn.delete('folders', where: 'id = ?', whereArgs: [folderID]);
+    });
+  }
+
+  @override
+  Future<void> moveFeedToFolder({required int feedID, int? folderID}) async {
+    await _database.update(
+      'feeds',
+      {'folder_id': folderID},
+      where: 'id = ?',
+      whereArgs: [feedID],
+    );
   }
 }

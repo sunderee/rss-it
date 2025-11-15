@@ -1,5 +1,6 @@
 import 'package:rss_it/domain/data/feed_entity.dart';
 import 'package:rss_it/domain/data/feed_item_entity.dart';
+import 'package:rss_it/domain/data/folder_entity.dart';
 
 enum GetFeedsOrderBy { title, addedAt }
 
@@ -16,7 +17,21 @@ abstract interface class DBProvider {
     required Iterable<FeedItemEntity> incomingFeedItems,
   });
 
+  Future<Iterable<FolderEntity>> getFolders({
+    OrderByDirection orderByDirection = OrderByDirection.ascending,
+  });
+
+  Future<int> createFolder({required FolderEntity folder});
+  Future<void> renameFolder({
+    required int folderID,
+    required String newName,
+  });
+
+  Future<void> deleteFolder({required int folderID});
+  Future<void> moveFeedToFolder({required int feedID, int? folderID});
+
   Future<Iterable<FeedEntity>> getFeeds({
+    int? folderID,
     GetFeedsOrderBy orderBy = GetFeedsOrderBy.title,
     OrderByDirection orderByDirection = OrderByDirection.ascending,
   });

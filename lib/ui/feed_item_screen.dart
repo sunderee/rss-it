@@ -24,13 +24,30 @@ final class FeedItemScreen extends StatefulWidget {
 
 final class _FeedItemScreenState extends State<FeedItemScreen> {
   late final WebViewController _controller;
+  late final Uri _initialUri;
 
   @override
   void initState() {
     super.initState();
+    _initialUri = Uri.parse(widget.feedItem.link);
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse(widget.feedItem.link));
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (request) {
+            final requestedUri = Uri.tryParse(request.url);
+            if (requestedUri == null) {
+              return NavigationDecision.prevent;
+            }
+            if (!_isAllowedUri(requestedUri)) {
+              _showBlockedNavigationSnackBar();
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
+      ..loadRequest(_initialUri);
   }
 
   @override
@@ -47,6 +64,7 @@ final class _FeedItemScreenState extends State<FeedItemScreen> {
           IconButton(
             onPressed: () => launchUrl(Uri.parse(widget.feedItem.link)),
             icon: const Icon(Icons.open_in_browser),
+              tooltip: 'Open in browser',
           ),
         ],
       ),
@@ -59,6 +77,19 @@ final class _FeedItemScreenState extends State<FeedItemScreen> {
       ShareParams(
         title: widget.feedItem.title,
         uri: Uri.tryParse(widget.feedItem.link),
+      ),
+    );
+  }
+
+  bool _isAllowedUri(Uri incoming) =>
+      incoming.host == _initialUri.host && incoming.scheme == _initialUri.scheme;
+
+  void _showBlockedNavigationSnackBar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Navigation blocked. Use the browser button to open external links.',
+        ),
       ),
     );
   }

@@ -1,11 +1,12 @@
-import 'package:dart_scope_functions/dart_scope_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:rss_it/domain/data/feed_entity.dart';
 import 'package:rss_it/notifiers/feed_notifier.dart';
 import 'package:rss_it/shared/di.dart';
+import 'package:rss_it/shared/utilities/extensions.dart';
+import 'package:rss_it/ui/components/bottom_sheet/move_feed_bottom_sheet.dart';
 import 'package:rss_it/ui/feed_screen.dart';
 
-enum _FeedCardMenuAction { delete, info }
+enum _FeedCardMenuAction { delete, info, move }
 
 final class FeedCard extends StatelessWidget {
   final FeedEntity feed;
@@ -14,33 +15,82 @@ final class FeedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sanitizedTitle = feed.title.trim();
+    final initials = sanitizedTitle.isNotEmpty
+        ? sanitizedTitle.substring(0, 1).toUpperCase()
+        : '?';
     return Card(
-      elevation: 0.0,
-      margin: const EdgeInsets.only(bottom: 8.0),
-      child: ListTile(
-        contentPadding: const EdgeInsets.only(left: 16.0),
+      clipBehavior: Clip.antiAlias,
+      margin: EdgeInsets.zero,
+      child: InkWell(
         onTap: () => FeedScreen.navigateTo(context, feed.id ?? -1, feed.title),
-        title: Text(feed.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: feed.description
-            ?.takeIf((it) => it.isNotEmpty)
-            ?.let(
-              (it) => Text(it, maxLines: 2, overflow: TextOverflow.ellipsis),
-            ),
-        trailing: PopupMenuButton<_FeedCardMenuAction>(
-          padding: EdgeInsets.zero,
-          menuPadding: EdgeInsets.zero,
-          icon: const Icon(Icons.more_vert),
-          onSelected: (action) => _onMenuButtonPressed(context, action),
-          itemBuilder: (context) => [
-            const PopupMenuItem<_FeedCardMenuAction>(
-              value: _FeedCardMenuAction.delete,
-              child: Text('Delete'),
-            ),
-            const PopupMenuItem<_FeedCardMenuAction>(
-              value: _FeedCardMenuAction.info,
-              child: Text('Info'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: context.theme.colorScheme.primaryContainer,
+                    child: Text(
+                      initials,
+                      style: context.theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      feed.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.theme.textTheme.titleMedium,
+                    ),
+                  ),
+                  PopupMenuButton<_FeedCardMenuAction>(
+                    tooltip: 'Feed actions',
+                    onSelected: (action) => _onMenuButtonPressed(context, action),
+                    itemBuilder: (context) => const [
+                      PopupMenuItem<_FeedCardMenuAction>(
+                        value: _FeedCardMenuAction.move,
+                        child: Text('Move to folder'),
+                      ),
+                      PopupMenuItem<_FeedCardMenuAction>(
+                        value: _FeedCardMenuAction.info,
+                        child: Text('Details'),
+                      ),
+                      PopupMenuItem<_FeedCardMenuAction>(
+                        value: _FeedCardMenuAction.delete,
+                        child: Text('Delete'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              if (feed.description?.isNotEmpty ?? false) ...[
+                const SizedBox(height: 12),
+                Text(
+                  feed.description!,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.theme.textTheme.bodyMedium?.copyWith(
+                    color: context.theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Text(
+                feed.url,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.theme.textTheme.labelMedium?.copyWith(
+                  color: context.theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -48,8 +98,9 @@ final class FeedCard extends StatelessWidget {
 
   void _onMenuButtonPressed(BuildContext context, _FeedCardMenuAction action) {
     final actionToExecute = switch (action) {
-      _FeedCardMenuAction.delete => () => _deleteFeed(context, feed.id),
-      _FeedCardMenuAction.info => () => _showFeedInfo(context, feed.id),
+        _FeedCardMenuAction.delete => () => _deleteFeed(context, feed.id),
+        _FeedCardMenuAction.info => () => _showFeedInfo(context, feed.id),
+        _FeedCardMenuAction.move => () => _moveFeed(context),
     };
 
     actionToExecute.call();
@@ -94,14 +145,36 @@ final class FeedCard extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 8.0,
           children: [
-            ?feed.description
-                ?.takeIf((it) => it.isNotEmpty)
-                ?.let((it) => Text(it)),
-            feed.url.let((it) => Text(it)),
+            if (feed.description?.isNotEmpty ?? false) ...[
+              Text(feed.description!),
+              const SizedBox(height: 8),
+            ],
+            Text(
+              feed.url,
+              style: context.theme.textTheme.bodyMedium?.copyWith(
+                color: context.theme.colorScheme.primary,
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _moveFeed(BuildContext context) {
+    if (feed.id == null) {
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => MoveFeedBottomSheet(
+        feedId: feed.id!,
+        feedTitle: feed.title,
+        currentFolderId: feed.folderId,
       ),
     );
   }

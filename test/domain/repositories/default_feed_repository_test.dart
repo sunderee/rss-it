@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:rss_it/domain/data/enums.dart';
 import 'package:rss_it/domain/data/feed_entity.dart';
 import 'package:rss_it/domain/data/feed_item_entity.dart';
+import 'package:rss_it/domain/data/folder_entity.dart';
 import 'package:rss_it/domain/providers/db_provider.dart';
 import 'package:rss_it/domain/repositories/default_feed_repository.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
@@ -35,6 +36,13 @@ void main() {
         createdAt: DateTime(2024, 1, 1),
       ),
     );
+      registerFallbackValue(
+        FolderEntity(
+          id: null,
+          name: 'Sample Folder',
+          createdAt: DateTime(2024, 1, 1),
+        ),
+      );
   });
 
   group('DefaultFeedRepository', () {
@@ -147,28 +155,46 @@ void main() {
       });
     });
 
-    group('getFeedsFromDB', () {
-      test('returns feeds from database', () async {
-        final feeds = MockFactories.createFeedEntities(count: 2);
+      group('getFeedsFromDB', () {
+        test('returns feeds from database', () async {
+          final feeds = MockFactories.createFeedEntities(count: 2);
 
-        when(() => mockDBProvider.getFeeds()).thenAnswer((_) async => feeds);
+          when(() => mockDBProvider.getFeeds()).thenAnswer((_) async => feeds);
 
-        final result = await repository.getFeedsFromDB();
+          final result = await repository.getFeedsFromDB();
 
-        expect(result.length, equals(2));
-        expect(result, equals(feeds));
-        verify(() => mockDBProvider.getFeeds()).called(1);
+          expect(result.length, equals(2));
+          expect(result, equals(feeds));
+          verify(() => mockDBProvider.getFeeds()).called(1);
+        });
+
+        test('returns empty list when no feeds exist', () async {
+          when(() => mockDBProvider.getFeeds()).thenAnswer((_) async => []);
+
+          final result = await repository.getFeedsFromDB();
+
+          expect(result.isEmpty, isTrue);
+          verify(() => mockDBProvider.getFeeds()).called(1);
+        });
       });
 
-      test('returns empty list when no feeds exist', () async {
-        when(() => mockDBProvider.getFeeds()).thenAnswer((_) async => []);
+      group('getFoldersFromDB', () {
+        test('returns folders from database', () async {
+          final folders = [
+            MockFactories.createFolderEntity(id: 1, name: 'Work'),
+            MockFactories.createFolderEntity(id: 2, name: 'Personal'),
+          ];
 
-        final result = await repository.getFeedsFromDB();
+          when(() => mockDBProvider.getFolders()).thenAnswer(
+            (_) async => folders,
+          );
 
-        expect(result.isEmpty, isTrue);
-        verify(() => mockDBProvider.getFeeds()).called(1);
+          final result = await repository.getFoldersFromDB();
+
+          expect(result, equals(folders));
+          verify(() => mockDBProvider.getFolders()).called(1);
+        });
       });
-    });
 
     group('getFeedItemsFromDB', () {
       test('returns feed items for specific feed', () async {
@@ -416,18 +442,81 @@ void main() {
       });
     });
 
-    group('deleteFeedFromDB', () {
-      test('deletes feed from database', () async {
-        const feedID = 1;
+      group('deleteFeedFromDB', () {
+        test('deletes feed from database', () async {
+          const feedID = 1;
 
-        when(
-          () => mockDBProvider.deleteFeed(feedID: any(named: 'feedID')),
-        ).thenAnswer((_) async => {});
+          when(
+            () => mockDBProvider.deleteFeed(feedID: any(named: 'feedID')),
+          ).thenAnswer((_) async => {});
 
-        await repository.deleteFeedFromDB(feedID);
+          await repository.deleteFeedFromDB(feedID);
 
-        verify(() => mockDBProvider.deleteFeed(feedID: feedID)).called(1);
+          verify(() => mockDBProvider.deleteFeed(feedID: feedID)).called(1);
+        });
       });
-    });
+
+      group('folder operations', () {
+        test('createFolder delegates to DB provider', () async {
+          when(
+            () => mockDBProvider.createFolder(folder: any(named: 'folder')),
+          ).thenAnswer((_) async => 7);
+
+          final result = await repository.createFolder('New Folder');
+
+          expect(result, equals(7));
+          verify(
+            () => mockDBProvider.createFolder(folder: any(named: 'folder')),
+          ).called(1);
+        });
+
+        test('renameFolder delegates to DB provider', () async {
+          when(
+            () => mockDBProvider.renameFolder(
+              folderID: any(named: 'folderID'),
+              newName: any(named: 'newName'),
+            ),
+          ).thenAnswer((_) async => {});
+
+          await repository.renameFolder(1, 'Renamed');
+
+          verify(
+            () => mockDBProvider.renameFolder(
+              folderID: 1,
+              newName: 'Renamed',
+            ),
+          ).called(1);
+        });
+
+        test('deleteFolder delegates to DB provider', () async {
+          when(
+            () => mockDBProvider.deleteFolder(folderID: any(named: 'folderID')),
+          ).thenAnswer((_) async => {});
+
+          await repository.deleteFolder(5);
+
+          verify(
+            () => mockDBProvider.deleteFolder(folderID: 5),
+          ).called(1);
+        });
+
+        test('moveFeedToFolder delegates to DB provider', () async {
+          when(
+            () => mockDBProvider.moveFeedToFolder(
+              feedID: any(named: 'feedID'),
+              folderID: any(named: 'folderID'),
+            ),
+          ).thenAnswer((_) async => {});
+
+          await repository.moveFeedToFolder(feedID: 10, folderID: 2);
+
+          verify(
+            () => mockDBProvider.moveFeedToFolder(
+              feedID: 10,
+              folderID: 2,
+            ),
+          ).called(1);
+        });
+      });
   });
 }
