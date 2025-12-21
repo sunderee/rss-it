@@ -1,9 +1,9 @@
 import 'package:rss_it/domain/data/feed_entity.dart';
 import 'package:rss_it/domain/data/feed_item_entity.dart';
+import 'package:rss_it/domain/data/folder_entity.dart';
 import 'package:rss_it_library/protos/feed.pb.dart';
 
 /// Factory functions for creating test data entities and protobuf messages
-
 class MockFactories {
   /// Creates a test FeedEntity with optional overrides
   static FeedEntity createFeedEntity({
@@ -13,14 +13,16 @@ class MockFactories {
     String? description,
     String? thumbnailURL,
     DateTime? addedAt,
+    int? folderId,
   }) {
     return FeedEntity(
-      id: id, // Default to null to let database assign ID
+      id: id,
       url: url ?? 'https://example.com/rss.xml',
       title: title ?? 'Test Feed',
       description: description ?? 'Test Feed Description',
       thumbnailURL: thumbnailURL ?? 'https://example.com/thumbnail.png',
       addedAt: addedAt ?? DateTime(2024, 1, 1),
+      folderId: folderId,
     );
   }
 
@@ -36,7 +38,7 @@ class MockFactories {
     DateTime? createdAt,
   }) {
     return FeedItemEntity(
-      id: id, // Default to null to let database assign ID
+      id: id,
       feedID: feedID ?? 1,
       link: link ?? 'https://example.com/article/1',
       title: title ?? 'Test Article',
@@ -100,6 +102,18 @@ class MockFactories {
     );
   }
 
+  static FolderEntity createFolderEntity({
+    int? id,
+    String? name,
+    DateTime? createdAt,
+  }) {
+    return FolderEntity(
+      id: id,
+      name: name ?? 'Folder ${id ?? 1}',
+      createdAt: createdAt ?? DateTime(2024, 1, 1),
+    );
+  }
+
   /// Creates a list of test FeedItemEntity objects
   static List<FeedItemEntity> createFeedItemEntities({
     int feedID = 1,
@@ -108,7 +122,7 @@ class MockFactories {
     return List.generate(
       count,
       (index) => createFeedItemEntity(
-        id: null, // Let database assign ID
+        id: null,
         feedID: feedID,
         link: 'https://example.com/article/${index + 1}',
         title: 'Test Article ${index + 1}',

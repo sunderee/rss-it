@@ -3,9 +3,12 @@ import 'package:rss_it/notifiers/feed_notifier.dart';
 import 'package:rss_it/shared/di.dart';
 import 'package:rss_it/shared/utilities/extensions.dart';
 import 'package:rss_it/ui/components/buttons/stateful_button.dart';
+import 'package:rss_it/ui/components/bottom_sheet/manage_folders_bottom_sheet.dart';
 
 final class AddFeedBottomSheet extends StatefulWidget {
-  const AddFeedBottomSheet({super.key});
+  const AddFeedBottomSheet({super.key, this.initialFolderId});
+
+  final int? initialFolderId;
 
   @override
   State<AddFeedBottomSheet> createState() => _AddFeedBottomSheetState();
@@ -21,6 +24,7 @@ final class _AddFeedBottomSheetState extends State<AddFeedBottomSheet>
 
   bool _isSubmitting = false;
   bool? _isValidUrl;
+  int? _selectedFolderId;
 
   bool get _canSubmit =>
       _controller.text.trim().isNotEmpty &&
@@ -35,6 +39,7 @@ final class _AddFeedBottomSheetState extends State<AddFeedBottomSheet>
     _animationController = BottomSheet.createAnimationController(this);
     _controller = TextEditingController();
     _focusNode = FocusNode();
+    _selectedFolderId = widget.initialFolderId;
   }
 
   @override
@@ -90,7 +95,43 @@ final class _AddFeedBottomSheetState extends State<AddFeedBottomSheet>
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 8.0),
+                const SizedBox(height: 16.0),
+                ListenableBuilder(
+                  listenable: _feedNotifier,
+                  builder: (context, _) {
+                    final folders = _feedNotifier.folders.toList();
+                    final entries = [
+                      const DropdownMenuEntry<int?>(
+                        value: null,
+                        label: 'No folder',
+                      ),
+                      ...folders.map(
+                        (folder) => DropdownMenuEntry<int?>(
+                          value: folder.id,
+                          label: folder.name,
+                        ),
+                      ),
+                    ];
+                    return DropdownMenu<int?>(
+                      leadingIcon: const Icon(Icons.folder_open),
+                      label: const Text('Folder (optional)'),
+                      textStyle: context.theme.textTheme.bodyLarge,
+                      dropdownMenuEntries: entries,
+                      initialSelection: _selectedFolderId,
+                      onSelected: (value) =>
+                          setState(() => _selectedFolderId = value),
+                    );
+                  },
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: _openFolderManager,
+                    icon: const Icon(Icons.create_new_folder_outlined),
+                    label: const Text('Manage folders'),
+                  ),
+                ),
+                const SizedBox(height: 8.0),
               StatefulButton(
                 state: _isSubmitting
                     ? StatefulButtonState.loading
@@ -123,7 +164,12 @@ final class _AddFeedBottomSheetState extends State<AddFeedBottomSheet>
     }
 
     setState(() => _isSubmitting = true);
-    _feedNotifier.addFeed(_controller.text.trim()).then((_) {
+    _feedNotifier
+        .addFeed(
+          _controller.text.trim(),
+          folderID: _selectedFolderId,
+        )
+        .then((_) {
       if (mounted) {
         setState(() => _isSubmitting = false);
         _animationController.reverse().then((_) {
@@ -136,4 +182,13 @@ final class _AddFeedBottomSheetState extends State<AddFeedBottomSheet>
   }
 
   void _resetValidation() => setState(() => _isValidUrl = null);
+
+  void _openFolderManager() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => const ManageFoldersBottomSheet(),
+    );
+  }
 }
